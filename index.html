@@ -3,317 +3,164 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>丙午 2026 - HINOEUMA</title>
-  
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
-
-  <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700;800&family=DotGothic16&display=swap" rel="stylesheet">
-  
+  <title>Layout Check</title>
+  <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;900&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Shippori Mincho', serif; background-color: #fff; overflow-x: hidden; }
-    .vertical-text { writing-mode: vertical-rl; text-orientation: mixed; }
-    .text-shadow-strong { text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
-    ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: #f1f1f1; }
-    ::-webkit-scrollbar-thumb { background: #B80028; border-radius: 4px; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Shippori Mincho', serif;
+      background-color: #f0f0f0;
+      overflow-x: hidden; /* 横スクロール防止 */
+    }
+
+    /* ▼ メインビジュアルのコンテナ（ポスターのようなレイアウト） */
+    .hero-container {
+      position: relative;
+      width: 100%;
+      height: 100vh; /* 画面いっぱいの高さ */
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 1. 背景の分割（上：白、下：赤） */
+    .bg-top {
+      height: 45%; /* 上45%が白 */
+      background-color: #ffffff;
+      width: 100%;
+    }
+    .bg-bottom {
+      height: 55%; /* 下55%が赤 */
+      background-color: #B80028;
+      width: 100%;
+      position: relative;
+    }
+
+    /* 2. 左端の巨大な英語縦書き */
+    .side-text {
+      position: absolute;
+      top: 0;
+      left: 2%;
+      height: 100%;
+      writing-mode: vertical-rl; /* 縦書き */
+      text-orientation: mixed;
+      font-family: 'Times New Roman', serif; /* 明朝系の英語フォント */
+      font-size: min(12vh, 8vw); /* 画面サイズに合わせて調整 */
+      font-weight: 100;
+      color: #111; /* 黒文字 */
+      line-height: 1;
+      z-index: 10;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+    /* 下半分の文字色を反転させるギミック（mix-blend-modeは背景によるので今回は黒のまま透過で調整） */
+    .side-text {
+      mix-blend-mode: difference; /* 背景が白なら黒、赤なら補色っぽくなる演出 */
+      color: #fff; /* differenceを使うので白指定にすると、白背景で黒、赤背景で青緑っぽくなる */
+      /* もし完全に黒にしたい場合は mix-blend-mode を外して color: #000 にしてください */
+      mix-blend-mode: normal;
+      color: #000;
+      opacity: 0.8;
+    }
+
+    /* 3. 右上の巨大な「丙午」 */
+    .kanji-big {
+      position: absolute;
+      top: -5%;
+      right: -5%;
+      font-size: 40vh; /* 画面の40%の大きさ */
+      font-weight: 900;
+      color: #C5A059; /* 金色っぽい色 */
+      line-height: 1;
+      z-index: 1;
+      opacity: 0.9;
+    }
+    .kanji-big .char-2 {
+      display: block;
+      margin-top: -0.2em; /* 文字を少し重ねる */
+      margin-left: 0.5em;
+    }
+    /* 下の「午」は赤背景にも被るので色調整が必要かもですが、一旦配置優先 */
+
+    /* 4. 中央の馬（重なり） */
+    .center-horse {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -60%); /* 中央配置 */
+      width: 60%; /* 画像サイズ */
+      max-width: 600px;
+      z-index: 5;
+    }
+
+    /* 5. 挨拶文エリア（赤背景の中） */
+    .greeting-text {
+      position: absolute;
+      bottom: 10%;
+      left: 20%; /* 左の英語と被らないように */
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.9rem;
+      line-height: 2;
+      z-index: 6;
+      text-align: left;
+    }
+    .greeting-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      color: #fff;
+    }
+
+    /* レスポンシブ調整（スマホ） */
+    @media (max-width: 768px) {
+      .side-text { font-size: 8vh; left: 10px; }
+      .kanji-big { font-size: 30vh; right: -10%; }
+      .center-horse { width: 90%; transform: translate(-45%, -55%); }
+      .greeting-text { left: 15%; font-size: 0.75rem; bottom: 5%; width: 80%; }
+    }
   </style>
 </head>
 <body>
-  <div id="root"></div>
 
-  <script type="text/babel">
-    const { useState, useEffect, useRef } = React;
-    const { motion, AnimatePresence, useScroll, useTransform } = window.Motion;
-
-    // ==========================================
-    // 🖼️ 画像パス設定
-    // ==========================================
-    const ASSETS = {
-      // ローディング用（img1〜img6は以前作成したものを使用）
-      fonts: ['./img1.png', './img2.png', './img3.png', './img4.png', './img5.png', './img6.png'],
-      stamp: './謹賀新年４.png',
-      // メイン用（今回リネームしたもの）
-      bg_text: './bg_text.jpg',
-      horse: './horse.jpg',
-      shrine: './shrine.jpg',
-      girl: './girl.png',
-    };
-
-    // ==========================================
-    // 🏇 競馬おみくじゲーム
-    // ==========================================
-    const HorseOmikujiGame = ({ onClose }) => {
-      const [gameState, setGameState] = useState('betting');
-      const [selectedHorse, setSelectedHorse] = useState(null);
-      const [horses, setHorses] = useState([
-        { id: 1, name: '大吉丸', color: '#FF0000', position: 0, odds: 2.5 },
-        { id: 2, name: '中吉号', color: '#FFD700', position: 0, odds: 3.0 },
-        { id: 3, name: '小吉風', color: '#00AA00', position: 0, odds: 4.0 },
-        { id: 4, name: '末吉駒', color: '#0066CC', position: 0, odds: 5.0 },
-        { id: 5, name: '凶避丸', color: '#8B008B', position: 0, odds: 8.0 },
-      ]);
-      const [winner, setWinner] = useState(null);
-
-      const fortunes = {
-        1: { rank: '大吉', message: '炎の馬が天を駆ける！\n今年は最高の運気に恵まれます。', color: '#FF0000' },
-        2: { rank: '中吉', message: '穏やかな追い風が吹く年。\n着実な努力が実を結びます。', color: '#FFD700' },
-        3: { rank: '小吉', message: '小さな幸せが積み重なる年。\n焦らず一歩ずつ進めば吉。', color: '#00AA00' },
-        4: { rank: '末吉', message: '後半から運気上昇！\n辛抱強く待てば転機が訪れます。', color: '#0066CC' },
-        5: { rank: '凶（転じて吉）', message: '丙午の炎が凶を焼き払う！\n困難を乗り越えれば大成します。', color: '#8B008B' },
-      };
-
-      const startRace = () => {
-        setGameState('racing');
-        const interval = setInterval(() => {
-          setHorses(prev => prev.map(h => ({
-            ...h,
-            position: Math.min(100, h.position + Math.random() * 8 + 2)
-          })));
-        }, 100);
-
-        setTimeout(() => {
-          clearInterval(interval);
-          const winId = Math.random() < 0.6 ? selectedHorse : Math.floor(Math.random() * 5) + 1;
-          setWinner(winId);
-          setHorses(prev => prev.map(h => ({
-            ...h,
-            position: h.id === winId ? 100 : Math.min(95, h.position)
-          })));
-          setTimeout(() => setGameState('result'), 800);
-        }, 3000);
-      };
-
-      return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 p-4 font-['DotGothic16']">
-          <div className="w-full max-w-2xl bg-green-900 border-4 border-yellow-600 rounded-lg overflow-hidden text-white relative shadow-2xl">
-            <button onClick={onClose} className="absolute top-2 right-2 text-2xl hover:text-red-500 z-10">×</button>
-            <div className="bg-red-800 p-4 text-center border-b-4 border-yellow-600">
-              <h2 className="text-2xl font-bold text-yellow-400">🏇 丙午競馬おみくじ</h2>
-            </div>
-            <div className="p-6">
-              {gameState === 'betting' && (
-                <>
-                  <p className="text-center mb-4 text-yellow-200">勝利を信じて馬を選べ！</p>
-                  <div className="space-y-2">
-                    {horses.map(h => (
-                      <button key={h.id} onClick={() => setSelectedHorse(h.id)} className={`w-full p-3 rounded border-2 flex justify-between items-center ${selectedHorse === h.id ? 'bg-yellow-500/30 border-yellow-400' : 'bg-black/30 border-gray-600'}`}>
-                        <span style={{color: h.color}}>■ {h.name}</span><span>x{h.odds}</span>
-                      </button>
-                    ))}
-                  </div>
-                  <button onClick={startRace} disabled={!selectedHorse} className="w-full mt-6 bg-red-600 py-3 rounded font-bold disabled:opacity-50 hover:bg-red-500 transition shadow-lg">出走！</button>
-                </>
-              )}
-              {gameState === 'racing' && (
-                <div className="bg-green-800 p-4 rounded border-2 border-green-600 space-y-4">
-                  <p className="text-center animate-pulse text-yellow-300">レース中...</p>
-                  {horses.map(h => (
-                    <div key={h.id} className="relative h-8 bg-green-950 rounded-full border border-green-700">
-                      <motion.div className="absolute top-[-8px] text-2xl" style={{ left: `${h.position}%` }}>🐎</motion.div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {gameState === 'result' && winner && (
-                <div className="text-center">
-                  <div className="text-6xl mb-4">🎊</div>
-                  <h3 className="text-4xl font-bold mb-4" style={{ color: fortunes[winner].color }}>{fortunes[winner].rank}</h3>
-                  <p className="whitespace-pre-wrap leading-relaxed mb-6">{fortunes[winner].message}</p>
-                  <div className="flex justify-center gap-4">
-                     <button onClick={() => {setGameState('betting'); setSelectedHorse(null); setHorses(h => h.map(x => ({...x, position:0})));}} className="px-6 py-2 bg-blue-600 rounded">もう一度</button>
-                     <button onClick={onClose} className="px-6 py-2 bg-gray-600 rounded">閉じる</button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </motion.div>
-      );
-    };
-
-    // ==========================================
-    // ❄️ 雪のエフェクト
-    // ==========================================
-    const SnowEffect = () => (
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {Array.from({ length: 40 }).map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute bg-white rounded-full opacity-70"
-            initial={{ x: Math.random() * 100 + "%", y: -10 }}
-            animate={{ y: "110vh", x: `calc(${Math.random() * 100}% + ${Math.random() * 20 - 10}px)` }}
-            transition={{ duration: 5 + Math.random() * 5, repeat: Infinity, ease: "linear", delay: Math.random() * 5 }}
-            style={{ width: Math.random() * 4 + 2, height: Math.random() * 4 + 2 }}
-          />
-        ))}
+  <div class="hero-container">
+    <div class="bg-top"></div>
+    <div class="bg-bottom">
+      <div class="greeting-text">
+        <div class="greeting-title">丙午</div>
+        <p>
+          謹んで新春のお慶びを申し上げます。<br><br>
+          六十年の時を経て巡りきたる「丙午（ひのえうま）」。<br>
+          太陽と生命力が重なるこの年は、強烈な陽の気であらゆる厄災を焼き払います。<br>
+          大地を蹴る炎の馬のごとく、今こそ内なる情熱を解き放つ時。<br>
+          新たな時代を切り拓く一年でありたいと願います。
+        </p>
       </div>
-    );
+    </div>
 
-    // ==========================================
-    // 🔄 ローディング画面（以前の完成版）
-    // ==========================================
-    const LoadingScreen = ({ onComplete }) => {
-      const [progress, setProgress] = useState(0);
-      const [fontIndex, setFontIndex] = useState(0);
-      const [showStamp, setShowStamp] = useState(false);
-      const [slideUp, setSlideUp] = useState(false);
+    <div class="side-text">
+      Happy New Yare2026
+    </div>
 
-      useEffect(() => {
-        const timer = setInterval(() => setProgress(p => (p >= 100 ? 100 : p + 1)), 35);
-        const flick = setInterval(() => setFontIndex(i => (i + 1) % ASSETS.fonts.length), 180);
-        return () => { clearInterval(timer); clearInterval(flick); };
-      }, []);
+    <div class="kanji-big">
+      <div>丙</div>
+      <div class="char-2" style="color: #9f803e; /* 下の文字は少し暗く? */">午</div>
+    </div>
 
-      useEffect(() => {
-        if (progress === 100) {
-          setTimeout(() => setShowStamp(true), 400);
-          setTimeout(() => setSlideUp(true), 2000);
-          setTimeout(onComplete, 2700);
-        }
-      }, [progress, onComplete]);
+    <img src="./horse.jpg" class="center-horse" alt="丙午の馬">
 
-      return (
-        <motion.div
-          className="fixed inset-0 z-[100] bg-white flex flex-col items-center justify-center"
-          animate={slideUp ? { y: '-100%' } : { y: 0 }}
-          transition={{ duration: 0.8, ease: [0.76, 0, 0.24, 1] }}
-        >
-          <div className="absolute top-8 left-8 text-sm tracking-widest">2025→2026</div>
-          <div className="absolute top-8 right-8 text-sm tracking-widest">hello 2026</div>
-          <div className="absolute bottom-8 left-8 text-sm tracking-widest">bye 2025</div>
-          <div className="absolute bottom-8 right-8 text-sm tracking-widest">Design Yano Taichi</div>
-          
-          <div className="relative w-full max-w-2xl h-64 flex items-center justify-center">
-             {!showStamp && ASSETS.fonts.map((src, i) => (
-               <img key={i} src={src} className="absolute h-32 md:h-48 object-contain" style={{ opacity: fontIndex === i ? 1 : 0 }} />
-             ))}
-             <AnimatePresence>
-               {showStamp && (
-                 <motion.img src={ASSETS.stamp} initial={{ scale: 3, opacity: 0, rotate: -15 }} animate={{ scale: 1, opacity: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 200 }} className="absolute h-48 md:h-64 object-contain" />
-               )}
-             </AnimatePresence>
-          </div>
-          <div className="absolute bottom-1/4 tracking-[0.3em]">loading - {String(progress).padStart(3, '0')}%</div>
-        </motion.div>
-      );
-    };
+  </div>
 
-    // ==========================================
-    // 🏠 メインアプリ
-    // ==========================================
-    const App = () => {
-      const [isLoading, setIsLoading] = useState(true);
-      const [showGame, setShowGame] = useState(false);
-      const { scrollY } = useScroll();
-      
-      // パララックス計算
-      const bgX = useTransform(scrollY, [0, 1000], ['0%', '-25%']);
-      const horseY = useTransform(scrollY, [0, 500], [0, -40]);
-      const girlY = useTransform(scrollY, [1500, 3000], [100, -30]);
+  <div style="position: relative;">
+    <img src="./shrine.jpg" style="width: 100%; display: block;" alt="神社">
+    </div>
 
-      return (
-        <>
-          <AnimatePresence>
-            {isLoading && <LoadingScreen onComplete={() => setIsLoading(false)} />}
-          </AnimatePresence>
+  <div style="background: white; padding: 4rem 2rem; display: flex; justify-content: center; align-items: center; gap: 2rem; flex-wrap: wrap;">
+    <div style="max-width: 500px;">
+      <h2 style="color: #B80028; font-weight: bold; margin-bottom: 1rem;">まだ全然やることが終わってない！！</h2>
+      <p style="font-size: 0.9rem; line-height: 1.8;">旧年中は大変お世話になりました...</p>
+    </div>
+    <img src="./girl.png" style="width: 200px;" alt="女の子">
+  </div>
 
-          <div className="relative">
-            {/* 1. Hero Section */}
-            <section className="h-screen relative overflow-hidden flex items-center justify-center bg-gray-50">
-              <motion.div className="absolute inset-0 flex items-center opacity-10" style={{ x: bgX }}>
-                <div className="flex whitespace-nowrap min-w-full">
-                  {[...Array(3)].map((_, i) => (
-                    <img key={i} src={ASSETS.bg_text} className="h-48 md:h-80 object-cover" />
-                  ))}
-                </div>
-              </motion.div>
-              
-              <motion.div style={{ y: horseY }} className="z-10 relative text-center px-4">
-                <motion.img 
-                  src={ASSETS.horse} 
-                  animate={{ y: [0, -15, 0] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                  className="w-64 md:w-[450px] mx-auto drop-shadow-2xl"
-                />
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: !isLoading ? 1 : 0, y: !isLoading ? 0 : 20 }} transition={{ delay: 0.5 }} className="mt-8">
-                  <h1 className="text-6xl md:text-9xl font-bold text-[#B80028] tracking-widest">丙午</h1>
-                  <p className="text-xl tracking-[0.5em] mt-4 text-gray-600">HINOEUMA 2026</p>
-                </motion.div>
-              </motion.div>
-              <div className="absolute bottom-10 animate-bounce text-gray-400 text-sm tracking-widest">SCROLL</div>
-            </section>
-
-            {/* 2. Greeting Section */}
-            <section className="min-h-screen bg-[#B80028] flex items-center justify-center py-20 relative">
-               <motion.div 
-                 initial={{ opacity: 0 }}
-                 whileInView={{ opacity: 1 }}
-                 transition={{ duration: 1 }}
-                 className="vertical-text text-white text-lg md:text-xl leading-loose h-[80vh] flex flex-wrap-reverse gap-12 justify-center items-center"
-               >
-                 <h2 className="text-5xl md:text-7xl font-bold mb-4">丙午</h2>
-                 <p className="mt-8">謹んで新春のお慶びを申し上げます。</p>
-                 <p>六十年の時を経て巡りきたる「丙午」。<br/>太陽と生命力が重なるこの年は、<br/>強烈な陽の気であらゆる厄災を焼き払います。</p>
-                 <p>大地を蹴る炎の馬のごとく、<br/>今こそ内なる情熱を解き放つ時。<br/>迷いを捨て、向かい風さえも推進力に変えて、<br/>己の信じる道をひた走る。</p>
-                 <p>新たな時代を切り拓く一年でありたいと願います。<br/>本年が皆様にとって、<br/>情熱と飛躍の素晴らしい年となりますように。</p>
-               </motion.div>
-            </section>
-
-            {/* 3. Shrine Section */}
-            <section className="h-screen relative overflow-hidden group bg-black">
-              <motion.div className="absolute inset-0" whileHover={{ scale: 1.05 }} transition={{ duration: 10 }}>
-                <img src={ASSETS.shrine} className="w-full h-full object-cover opacity-80" />
-                <SnowEffect />
-              </motion.div>
-              
-              <div className="absolute inset-0 flex items-center justify-center cursor-pointer" onClick={() => setShowGame(true)}>
-                <motion.div whileHover={{ scale: 1.1 }} className="bg-black/30 backdrop-blur-sm border border-white/30 p-8 rounded-full text-center hover:bg-white/10 transition-all group-hover:border-yellow-400">
-                  <p className="text-white text-2xl tracking-[0.3em] font-bold text-shadow-strong">Touch to Pray</p>
-                  <p className="text-white/80 text-sm mt-2 tracking-widest">〜 おみくじを引く 〜</p>
-                </motion.div>
-              </div>
-            </section>
-
-            {/* 4. Footer Section */}
-            <section className="min-h-screen bg-white py-20 px-6 flex items-center justify-center relative overflow-hidden">
-              <div className="max-w-6xl w-full grid md:grid-cols-2 gap-16 items-center z-10">
-                <div className="space-y-8">
-                  <h2 className="text-3xl md:text-4xl font-bold text-gray-800 border-b-4 border-red-600 inline-block pb-4">まだ全然やることが終わってない！！</h2>
-                  <div className="text-gray-700 leading-9 space-y-4 text-justify font-medium">
-                    <p>旧年中は大変お世話になりました。皆様のおかげで無事に2026年を迎えることができました。</p>
-                    <p>実のところ、2025年はやるべきことを完遂できず、悔いの残る形となってしまいました……。決して誇れることではありませんが、気持ちを切り替えて、まずは目の前の課題を一つひとつ片付けていく所存です。</p>
-                    <p>さて、2026年は午（うま）年ですね。その影響もあってか、最近は競馬などの「馬」コンテンツにすっかり魅了されています。特にドラマ『ザ・ロイヤルファミリー』が気になって仕方がないのですが、未消化のタスクが山積みでまだ見られていません。</p>
-                    <p className="font-bold text-red-700">早くやるべきことを終わらせて、心置きなくドラマを楽しみたいと思います。</p>
-                  </div>
-                </div>
-                
-                <motion.div style={{ y: girlY }} className="relative text-center">
-                   <div className="absolute -top-12 -left-4 bg-white border-2 border-gray-200 p-4 rounded-full shadow-lg z-10 animate-bounce">
-                     <p className="text-sm text-gray-500 font-bold">ま……間に合わない</p>
-                   </div>
-                   <img src={ASSETS.girl} className="w-64 md:w-[400px] mx-auto" alt="キャラクター" />
-                </motion.div>
-              </div>
-              
-              <footer className="absolute bottom-6 w-full text-center text-xs text-gray-400">
-                © 2026 HINOEUMA Project - Design Yano Taichi ⇔ fukikaze46
-              </footer>
-            </section>
-
-            <AnimatePresence>
-              {showGame && <HorseOmikujiGame onClose={() => setShowGame(false)} />}
-            </AnimatePresence>
-          </div>
-        </>
-      );
-    };
-
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
-  </script>
 </body>
 </html>
