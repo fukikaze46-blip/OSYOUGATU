@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>丙午 2026 - 謹賀新年</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700;900&family=Shippori+Mincho:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            line-height: 1.8;
+            overflow-x: hidden;
+        }
+
+        /* ========== ローディング中はスクロール禁止 ========== */
+        body.loading {
+            overflow: hidden;
+        }
+
+        /* ========== 動的背景 ========== */
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background: linear-gradient(45deg, #0a0a0a, #1a0a0a, #0a0a1a);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 光の軌跡 */
+        .light-trails {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .light-trail {
+            position: absolute;
+            width: 2px;
+            height: 100px;
+            background: linear-gradient(to bottom, transparent, gold, transparent);
+            animation: trailFall linear infinite;
+            opacity: 0.4;
+        }
+
+        @keyframes trailFall {
+            0% { transform: translateY(-100vh) translateX(0); }
+            100% { transform: translateY(100vh) translateX(100px); }
+        }
+
+        /* 浮遊する円 */
+        .floating-orbs {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(40px);
+            animation: orbFloat 20s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 300px;
+            height: 300px;
+            background: rgba(201, 22, 29, 0.3);
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .orb-2 {
+            width: 400px;
+            height: 400px;
+            background: rgba(255, 215, 0, 0.15);
+            top: 60%;
+            right: 10%;
+            animation-delay: -5s;
+        }
+
+        .orb-3 {
+            width: 250px;
+            height: 250px;
+            background: rgba(201, 22, 29, 0.2);
+            bottom: 20%;
+            left: 30%;
+            animation-delay: -10s;
+        }
+
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(50px, -30px) scale(1.1); }
+            50% { transform: translate(-30px, 50px) scale(0.9); }
+            75% { transform: translate(-50px, -20px) scale(1.05); }
+        }
+
+        /* ========== ヒーローセクション - 馬を画面いっぱいに ========== */
+        .hero {
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero-bg-split {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+        }
+
+        .hero-bg-left {
+            flex: 1;
+            background: linear-gradient(135deg, #fff 0%, #f5f0e6 100%);
+        }
+
+        .hero-bg-right {
+            flex: 1;
+            background: linear-gradient(135deg, #c9161d 0%, #8b0000 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-bg-right::before {
+            content: '丙午';
+            position: absolute;
+            right: -80px;
+            top: 50%;
+            transform: translateY(-50%);
+            writing-mode: vertical-rl;
+            font-family: 'Shippori Mincho', serif;
+            font-size: 400px;
+            font-weight: 800;
+            color: rgba(255,255,255,0.05);
+            animation: kanjiPulse 4s ease-in-out infinite;
+        }
+
+        @keyframes kanjiPulse {
+            0%, 100% { opacity: 0.05; }
+            50% { opacity: 0.1; }
+        }
+
+        /* ★★★ 馬のサイズはここで調整 ★★★ */
+        .horse-container {
+            position: relative;
+            z-index: 10;
+            width: 95vw;           /* ← 横幅（vw = 画面幅の%） */
+            max-width: 1400px;     /* ← 最大幅（これを大きくすると馬が大きくなる） */
+            animation: horseEntrance 1.5s ease-out;
+        }
+
+        @keyframes horseEntrance {
+            0% { transform: translateX(-100px) scale(0.9); opacity: 0; }
+            100% { transform: translateX(0) scale(1); opacity: 1; }
+        }
+
+        .horse-image {
+            width: 100%;          /* ← コンテナいっぱいに広がる */
+            height: auto;
+            filter: drop-shadow(0 50px 100px rgba(0,0,0,0.3));
+            animation: horseBreathing 4s ease-in-out infinite;
+        }
+
+        @keyframes horseBreathing {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .hero-text {
+            position: absolute;
+            bottom: 10%;
+            left: 5%;
+            z-index: 20;
+            animation: textSlideUp 1s ease-out 0.5s both;
+        }
+
+        @keyframes textSlideUp {
+            0% { transform: translateY(50px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        .hero-text .year {
+            font-family: 'Shippori Mincho', serif;
+            font-size: clamp(100px, 15vw, 200px);
+            font-weight: 800;
+            background: linear-gradient(135deg, #c9161d 0%, #ff4444 50%, #c9161d 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            animation: yearGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes yearGlow {
+            0%, 100% { filter: drop-shadow(0 0 20px rgba(201,22,29,0.5)); }
+            50% { filter: drop-shadow(0 0 40px rgba(201,22,29,0.8)); }
+        }
+
+        .hero-text .sub {
+            font-size: clamp(16px, 2vw, 24px);
+            color: #666;
+            margin-top: 20px;
+            letter-spacing: 0.4em;
+            font-weight: 300;
+            animation: textFadeIn 1s ease-out 1s both;
+        }
+
+        @keyframes textFadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        /* スクロールインジケーター */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        .scroll-indicator span {
+            display: block;
+            width: 30px;
+            height: 50px;
+            border: 2px solid rgba(255,215,0,0.5);
+            border-radius: 15px;
+            position: relative;
+        }
+
+        .scroll-indicator span::before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 10px;
+            background: gold;
+            border-radius: 3px;
+            animation: scrollDot 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(10px); }
+        }
+
+        @keyframes scrollDot {
+            0%, 100% { top: 8px; opacity: 1; }
+            50% { top: 25px; opacity: 0.3; }
+        }
+
+        /* ========== 挨拶セクション ========== */
+        .greeting {
+            background: linear-gradient(180deg, #c9161d 0%, #6a0018 100%);
+            padding: 150px 10%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .greeting::before {
+            content: '丙午';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Shippori Mincho', serif;
+            font-size: clamp(250px, 40vw, 600px);
+            font-weight: 800;
+            color: rgba(255,255,255,0.03);
+            white-space: nowrap;
+            pointer-events: none;
+            animation: bgTextFloat 10s ease-in-out infinite;
+        }
+
+        @keyframes bgTextFloat {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.05); }
+        }
+
+        .greeting-content {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .greeting h2 {
+            font-family: 'Shippori Mincho', serif;
+            font-size: clamp(40px, 7vw, 80px);
+            font-weight: 700;
+            margin-bottom: 60px;
+            text-align: center;
+            letter-spacing: 0.5em;
+            color: #fff;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { text-shadow: 0 0 30px rgba(255,215,0,0.3); }
+            50% { text-shadow: 0 0 60px rgba(255,215,0,0.6), 0 0 100px rgba(255,215,0,0.3); }
+        }
+
+        .greeting-text {
+            font-size: clamp(17px, 2.2vw, 22px);
+            font-weight: 300;
+            line-height: 3;
+            text-align: center;
+            color: rgba(255,255,255,0.95);
+        }
+
+        .greeting-text p {
+            margin-bottom: 2em;
+        }
+
+        /* ========== おみくじセクション ========== */
+        .omikuji-section {
+            background: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
+            padding: 150px 10%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .omikuji-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(255,215,0,0.15) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(201,22,29,0.15) 0%, transparent 40%);
+            animation: bgRadialPulse 8s ease-in-out infinite;
+        }
+
+        @keyframes bgRadialPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .running-horses {
+            position: absolute;
+            bottom: 50px;
+            left: 0;
+            width: 200%;
+            height: 60px;
+            display: flex;
+            animation: runHorses 10s linear infinite;
+        }
+
+        @keyframes runHorses {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .running-horses span {
+            font-size: 40px;
+            margin-right: 80px;
+            opacity: 0.1;
+        }
+
+        .omikuji-content {
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .omikuji-badge {
+            display: inline-block;
+            padding: 10px 40px;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #000;
+            font-weight: 700;
+            font-size: 16px;
+            letter-spacing: 0.2em;
+            border-radius: 30px;
+            margin-bottom: 40px;
+            animation: badgeShine 3s ease-in-out infinite;
+        }
+
+        @keyframes badgeShine {
+            0%, 100% { box-shadow: 0 0 20px rgba(255,215,0,0.5); }
+            50% { box-shadow: 0 0 40px rgba(255,215,0,0.8); }
+        }
+
+        .omikuji-title {
+            font-family: 'Shippori Mincho', serif;
+            font-size: clamp(36px, 6vw, 72px);
+            font-weight: 800;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #FFD700 0%, #fff 50%, #FFD700 100%);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientText 3s ease-in-out infinite;
+        }
+
+        @keyframes gradientText {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .omikuji-desc {
+            font-size: 20px;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 60px;
+            line-height: 2.2;
+        }
+
+        .omikuji-button {
+            display: inline-block;
+            padding: 30px 100px;
+            font-family: 'Shippori Mincho', serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+            background: linear-gradient(135deg, #c9161d 0%, #ff3333 50%, #c9161d 100%);
+            background-size: 200% 200%;
+            border: 5px solid #FFD700;
+            border-radius: 70px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 15px 50px rgba(201,22,29,0.5);
+            animation: buttonPulse 2s ease-in-out infinite, buttonGradient 3s ease-in-out infinite;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .omikuji-button::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+            transform: rotate(45deg);
+            animation: buttonShine 3s ease-in-out infinite;
+        }
+
+        @keyframes buttonShine {
+            0% { transform: rotate(45deg) translateX(-100%); }
+            50%, 100% { transform: rotate(45deg) translateX(100%); }
+        }
+
+        @keyframes buttonGradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes buttonPulse {
+            0%, 100% { 
+                box-shadow: 0 15px 50px rgba(201,22,29,0.5), 0 0 0 0 rgba(255,215,0,0.5);
+                transform: scale(1);
+            }
+            50% { 
+                box-shadow: 0 20px 70px rgba(201,22,29,0.7), 0 0 0 20px rgba(255,215,0,0);
+                transform: scale(1.02);
+            }
+        }
+
+        .omikuji-button:hover {
+            transform: translateY(-10px) scale(1.08);
+            box-shadow: 0 30px 80px rgba(201,22,29,0.7);
+        }
+
+        .omikuji-note {
+            margin-top: 50px;
+            font-size: 15px;
+            color: rgba(255,255,255,0.4);
+        }
+
+        /* ========== 本音セクション ========== */
+        .honesty {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: 100vh;
+        }
+
+        .honesty-text {
+            background: linear-gradient(135deg, #fafafa 0%, #f0e6d6 100%);
+            padding: 100px 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .honesty-text h2 {
+            font-family: 'Shippori Mincho', serif;
+            font-size: clamp(30px, 4.5vw, 48px);
+            font-weight: 700;
+            color: #c9161d;
+            margin-bottom: 50px;
+            line-height: 1.5;
+            animation: headlineWiggle 5s ease-in-out infinite;
+        }
+
+        @keyframes headlineWiggle {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-0.5deg); }
+            75% { transform: rotate(0.5deg); }
+        }
+
+        .honesty-text h2 span {
+            display: inline;
+            background: linear-gradient(transparent 60%, rgba(201,22,29,0.25) 60%);
+        }
+
+        .honesty-text p {
+            font-size: clamp(15px, 1.6vw, 18px);
+            line-height: 2.5;
+            margin-bottom: 2em;
+            color: #333;
+        }
+
+        .honesty-text .signature {
+            margin-top: 50px;
+            font-family: 'Shippori Mincho', serif;
+            font-size: 18px;
+            color: #888;
+            text-align: right;
+            letter-spacing: 0.3em;
+        }
+
+        .character-area {
+            background: linear-gradient(135deg, #fff 0%, #faf8f5 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .character-area::before {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(201,22,29,0.1) 0%, transparent 70%);
+            animation: characterGlow 4s ease-in-out infinite;
+        }
+
+        @keyframes characterGlow {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 1; }
+        }
+
+        .character-image {
+            width: 100%;
+            max-width: 700px;
+            height: auto;
+            position: relative;
+            z-index: 1;
+            animation: characterFloat 6s ease-in-out infinite;
+        }
+
+        @keyframes characterFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(1deg); }
+        }
+
+        /* ========== フッター ========== */
+        .footer {
+            background: linear-gradient(180deg, #0a0a0a 0%, #000 100%);
+            padding: 100px 10%;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #FFD700, #c9161d, #FFD700, transparent);
+            animation: lineGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes lineGlow {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        .footer .year-mark {
+            font-family: 'Shippori Mincho', serif;
+            font-size: 100px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #c9161d 0%, #ff4444 50%, #FFD700 100%);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 30px;
+            animation: footerGradient 5s ease-in-out infinite;
+        }
+
+        @keyframes footerGradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .footer p {
+            font-size: 18px;
+            color: rgba(255,255,255,0.4);
+            letter-spacing: 0.3em;
+        }
+
+        /* ========== レスポンシブ ========== */
+        @media (max-width: 900px) {
+            .hero-bg-split {
+                flex-direction: column;
+            }
+
+            .hero-bg-left, .hero-bg-right {
+                height: 50%;
+            }
+
+            .hero-bg-right::before {
+                font-size: 150px;
+                right: -30px;
+            }
+
+            .horse-container {
+                width: 98vw;
+            }
+
+            .hero-text {
+                bottom: 5%;
+                left: 3%;
+            }
+
+            .greeting {
+                padding: 100px 6%;
+            }
+
+            .omikuji-section {
+                padding: 100px 6%;
+            }
+
+            .omikuji-button {
+                padding: 25px 60px;
+                font-size: 22px;
+            }
+
+            .honesty {
+                grid-template-columns: 1fr;
+            }
+
+            .honesty-text {
+                padding: 60px 6%;
+                order: 2;
+            }
+
+            .character-area {
+                min-height: 60vh;
+                order: 1;
+            }
+        }
+
+        /* ========== スマホ専用レイアウト ========== */
+        @media (max-width: 600px) {
+            /* ヒーローセクション - スマホ用 */
+            .hero {
+                min-height: 100vh;
+                min-height: 100dvh;
+                flex-direction: column;
+                justify-content: flex-start;
+                padding-top: 0;
+            }
+
+            .hero-bg-split {
+                flex-direction: column;
+            }
+
+            .hero-bg-left {
+                height: 65vh;
+                height: 65dvh;
+            }
+
+            .hero-bg-right {
+                height: 35vh;
+                height: 35dvh;
+            }
+
+            .hero-bg-right::before {
+                font-size: 100px;
+                right: -10px;
+                writing-mode: horizontal-tb;
+                top: 50%;
+                transform: translateY(-50%);
+            }
+
+            .horse-container {
+                position: absolute;
+                top: 5%;
+                width: 100vw;
+                max-width: none;
+                padding: 0 10px;
+            }
+
+            .horse-image {
+                width: 100%;
+                filter: drop-shadow(0 20px 40px rgba(0,0,0,0.2));
+            }
+
+            .hero-text {
+                position: absolute;
+                bottom: auto;
+                top: 58%;
+                left: 50%;
+                transform: translateX(-50%);
+                text-align: center;
+                width: 100%;
+                padding: 0 20px;
+            }
+
+            .hero-text .year {
+                font-size: 80px;
+                text-shadow: 0 2px 20px rgba(255,255,255,0.5);
+            }
+
+            .hero-text .sub {
+                font-size: 12px;
+                letter-spacing: 0.15em;
+                color: #fff;
+                margin-top: 10px;
+            }
+
+            .scroll-indicator {
+                bottom: 15px;
+            }
+
+            .scroll-indicator span {
+                width: 24px;
+                height: 40px;
+                border-color: rgba(255,255,255,0.5);
+            }
+
+            /* 挨拶セクション - スマホ用 */
+            .greeting {
+                padding: 60px 5%;
+            }
+
+            .greeting::before {
+                font-size: 150px;
+            }
+
+            .greeting h2 {
+                font-size: 28px;
+                letter-spacing: 0.15em;
+                margin-bottom: 40px;
+            }
+
+            .greeting-text {
+                font-size: 14px;
+                line-height: 2.2;
+            }
+
+            .greeting-text p {
+                margin-bottom: 1.5em;
+            }
+
+            /* おみくじセクション - スマホ用 */
+            .omikuji-section {
+                padding: 60px 5%;
+            }
+
+            .running-horses {
+                display: none;
+            }
+
+            .omikuji-badge {
+                font-size: 12px;
+                padding: 8px 20px;
+                margin-bottom: 25px;
+            }
+
+            .omikuji-title {
+                font-size: 24px;
+                margin-bottom: 20px;
+            }
+
+            .omikuji-desc {
+                font-size: 14px;
+                line-height: 1.9;
+                margin-bottom: 40px;
+            }
+
+            .omikuji-button {
+                display: block;
+                width: 90%;
+                max-width: 300px;
+                margin: 0 auto;
+                padding: 20px 30px;
+                font-size: 18px;
+                border-width: 3px;
+                border-radius: 50px;
+            }
+
+            .omikuji-note {
+                margin-top: 30px;
+                font-size: 12px;
+            }
+
+            /* 本音セクション - スマホ用 */
+            .honesty {
+                display: flex;
+                flex-direction: column;
+                min-height: auto;
+            }
+
+            .character-area {
+                order: 1;
+                min-height: 40vh;
+                padding: 30px 20px;
+            }
+
+            .character-image {
+                max-width: 280px;
+            }
+
+            .honesty-text {
+                order: 2;
+                padding: 40px 5%;
+                background: linear-gradient(180deg, #fafafa 0%, #f5efe5 100%);
+            }
+
+            .honesty-text h2 {
+                font-size: 20px;
+                margin-bottom: 30px;
+                line-height: 1.6;
+            }
+
+            .honesty-text p {
+                font-size: 13px;
+                line-height: 2;
+                margin-bottom: 1.5em;
+            }
+
+            .honesty-text .signature {
+                margin-top: 30px;
+                font-size: 14px;
+            }
+
+            /* フッター - スマホ用 */
+            .footer {
+                padding: 50px 5%;
+            }
+
+            .footer .year-mark {
+                font-size: 50px;
+                margin-bottom: 15px;
+            }
+
+            .footer p {
+                font-size: 12px;
+                letter-spacing: 0.15em;
+            }
+
+            /* 背景エフェクト軽量化 */
+            .light-trails {
+                display: none;
+            }
+
+            .floating-orbs .orb {
+                display: none;
+            }
+
+            .floating-orbs .orb-1 {
+                display: block;
+                width: 200px;
+                height: 200px;
+            }
+        }
+
+        /* ========== 非常に小さい画面用 ========== */
+        @media (max-width: 380px) {
+            .hero-text .year {
+                font-size: 60px;
+            }
+
+            .greeting h2 {
+                font-size: 24px;
+            }
+
+            .omikuji-title {
+                font-size: 20px;
+            }
+
+            .omikuji-button {
+                font-size: 16px;
+                padding: 18px 25px;
+            }
+
+            .honesty-text h2 {
+                font-size: 18px;
+            }
+
+            .footer .year-mark {
+                font-size: 40px;
+            }
+        }
+
+        /* ========== メインコンテンツの初期非表示 ========== */
+        .main-content {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .main-content.visible {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="loading">
+    <!-- Reactローディング画面 -->
+    <div id="loading-root"></div>
+
+    <!-- メインコンテンツ -->
+    <div class="main-content" id="main-content">
+        <!-- 背景エフェクト -->
+        <div class="animated-bg"></div>
+        <div class="light-trails" id="lightTrails"></div>
+        <div class="floating-orbs">
+            <div class="orb orb-1"></div>
+            <div class="orb orb-2"></div>
+            <div class="orb orb-3"></div>
+        </div>
+
+        <!-- ヒーローセクション -->
+        <section class="hero">
+            <div class="hero-bg-split">
+                <div class="hero-bg-left"></div>
+                <div class="hero-bg-right"></div>
+            </div>
+            
+            <div class="horse-container">
+                <img src="horse.png" alt="丙午 2026" class="horse-image">
+            </div>
+            
+            <div class="hero-text">
+                <div class="year">2026</div>
+                <div class="sub">HINOE-UMA ── 丙午</div>
+            </div>
+
+            <div class="scroll-indicator">
+                <span></span>
+            </div>
+        </section>
+
+        <!-- 挨拶セクション -->
+        <section class="greeting">
+            <div class="greeting-content">
+                <h2>謹 賀 新 年</h2>
+                <div class="greeting-text">
+                    <p>六十年の時を経て巡りきたる「丙午」。<br>太陽と生命力が重なるこの年は、<br>強烈な陽の気であらゆる厄災を焼き払います。</p>
+                    <p>大地を蹴る炎の馬のごとく、<br>今こそ内なる情熱を解き放つ時。</p>
+                    <p>迷いを捨て、向かい風さえも推進力に変えて、<br>己の信じる道をひた走る。</p>
+                    <p>本年が皆様にとって、<br>情熱と飛躍の素晴らしい年となりますように。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- おみくじセクション -->
+        <section class="omikuji-section">
+            <div class="running-horses">
+                <span>🏇</span><span>🏇</span><span>🏇</span><span>🏇</span><span>🏇</span><span>🏇</span><span>🏇</span>
+                <span>🏇</span><span>🏇</span><span>🏇</span><span>🏇</span><span>🏇</span><span>🏇</span><span>🏇</span>
+            </div>
+            <div class="omikuji-content">
+                <span class="omikuji-badge">🎍 NEW YEAR SPECIAL 🎍</span>
+                <h2 class="omikuji-title">午年！爆走おみくじ競馬</h2>
+                <p class="omikuji-desc">
+                    2026年の運勢を競馬で占おう！<br>
+                    7頭のレースであなたの順位がおみくじ結果に。<br>
+                    1着なら大吉、7着なら…？
+                </p>
+                <a href="omikuji.html" target="_blank" class="omikuji-button">
+                    🏇 おみくじを引く 🏇
+                </a>
+                <p class="omikuji-note">※ 別タブで開きます</p>
+            </div>
+        </section>
+
+        <!-- 本音セクション -->
+        <section class="honesty">
+            <div class="honesty-text">
+                <h2><span>まだ全然やることが<br>終わってない！！</span></h2>
+                <p>旧年中は大変お世話になりました。皆様のおかげで無事に2026年を迎えることができました。</p>
+                <p>実のところ、2025年はやるべきことを完遂できず、悔いの残る形となってしまいました……。決して誇れることではありませんが、気持ちを切り替えて、まずは目の前の課題を一つひとつ片付けていく所存です。</p>
+                <p>さて、2026年は午年。最近は競馬などの「馬」コンテンツにすっかり魅了されています。特にドラマ『ザ・ロイヤルファミリー』が気になって仕方がないのですが、未消化のタスクが山積みでまだ見られていません。</p>
+                <p>早くやるべきことを終わらせて、心置きなくドラマを楽しみたい……。相変わらずバタバタとした私ですが、本年も変わらぬお付き合いのほど、よろしくお願いいたします。</p>
+                <div class="signature">二〇二六年 元旦</div>
+            </div>
+            <div class="character-area">
+                <img src="character.png" alt="キャラクター" class="character-image">
+            </div>
+        </section>
+
+        <!-- フッター -->
+        <footer class="footer">
+            <div class="year-mark">丙午</div>
+            <p>HAPPY NEW YEAR 2026</p>
+        </footer>
+    </div>
+
+    <!-- ローディング画面のReactコンポーネント -->
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { motion, AnimatePresence } = window.Motion;
+
+        const FONTS = [
+            './img1.png',
+            './img2.png',
+            './img3.png',
+            './img4.png',
+            './img5.png',
+            './img6.png',
+        ];
+
+        const STAMP_IMAGE = './stamp.png';
+        const FLICKER_SPEED = 150;
+
+        const LoadingScreen = ({ onComplete }) => {
+            const [progress, setProgress] = useState(0);
+            const [currentFontIndex, setCurrentFontIndex] = useState(0);
+            const [showStamp, setShowStamp] = useState(false);
+            const [slideUp, setSlideUp] = useState(false);
+            const [isFlickering, setIsFlickering] = useState(true);
+
+            useEffect(() => {
+                const interval = setInterval(() => {
+                    setProgress(prev => {
+                        if (prev >= 100) {
+                            clearInterval(interval);
+                            return 100;
+                        }
+                        return prev + 1;
+                    });
+                }, 30);
+                return () => clearInterval(interval);
+            }, []);
+
+            useEffect(() => {
+                if (!isFlickering) return;
+                const interval = setInterval(() => {
+                    setCurrentFontIndex(prev => (prev + 1) % FONTS.length);
+                }, FLICKER_SPEED);
+                return () => clearInterval(interval);
+            }, [isFlickering]);
+
+            useEffect(() => {
+                if (progress === 100) {
+                    setIsFlickering(false);
+                    setTimeout(() => setShowStamp(true), 400);
+                    setTimeout(() => setSlideUp(true), 2000);
+                    setTimeout(() => onComplete && onComplete(), 2700);
+                }
+            }, [progress, onComplete]);
+
+            const isMobile = window.innerWidth <= 600;
+            const textStyle = {
+                fontSize: isMobile ? '0.75rem' : '1.1rem',
+                letterSpacing: '0.08em',
+                fontWeight: '400',
+                color: '#000',
+            };
+            const edgePadding = isMobile ? '1.2rem' : '3rem';
+            const verticalPadding = isMobile ? '1.5rem' : '2.5rem';
+
+            return (
+                <motion.div
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        backgroundColor: 'white',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1000,
+                        fontFamily: "'Shippori Mincho', serif",
+                    }}
+                    animate={slideUp ? { y: '-100%' } : { y: 0 }}
+                    transition={{ duration: 0.7, ease: [0.76, 0, 0.24, 1] }}
+                >
+                    {/* 上部左 */}
+                    <div style={{ ...textStyle, position: 'absolute', top: verticalPadding, left: edgePadding }}>
+                        2025→2026
+                    </div>
+
+                    {/* 上部中央 */}
+                    <div style={{ ...textStyle, position: 'absolute', top: verticalPadding, left: '50%', transform: 'translateX(-50%)' }}>
+                        loading - {String(progress).padStart(3, '0')}%
+                    </div>
+
+                    {/* 上部右 */}
+                    <div style={{ ...textStyle, position: 'absolute', top: verticalPadding, right: edgePadding }}>
+                        hello 2026
+                    </div>
+
+                    {/* 中央の謹賀新年 */}
+                    <div style={{
+                        position: 'relative',
+                        width: '90%',
+                        maxWidth: '1100px',
+                        height: isMobile ? '30vh' : '40vh',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}>
+                        {!showStamp && FONTS.map((font, index) => (
+                            <img
+                                key={index}
+                                src={font}
+                                alt="謹賀新年"
+                                style={{
+                                    position: 'absolute',
+                                    maxWidth: '100%',
+                                    maxHeight: '100%',
+                                    width: 'auto',
+                                    height: 'auto',
+                                    objectFit: 'contain',
+                                    opacity: currentFontIndex === index ? 1 : 0,
+                                    transition: 'opacity 0.05s',
+                                }}
+                            />
+                        ))}
+
+                        <AnimatePresence>
+                            {showStamp && (
+                                <motion.img
+                                    src={STAMP_IMAGE}
+                                    alt="謹賀新年"
+                                    style={{
+                                        position: 'absolute',
+                                        maxWidth: '100%',
+                                        maxHeight: '100%',
+                                        width: 'auto',
+                                        height: 'auto',
+                                        objectFit: 'contain',
+                                    }}
+                                    initial={{ scale: 5, opacity: 0, rotate: -20 }}
+                                    animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                                    transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                                />
+                            )}
+                        </AnimatePresence>
+                    </div>
+
+                    {/* 下部左 */}
+                    <div style={{ ...textStyle, position: 'absolute', bottom: verticalPadding, left: edgePadding }}>
+                        bye 2025
+                    </div>
+
+                    {/* 下部中央 */}
+                    <div style={{ ...textStyle, position: 'absolute', bottom: verticalPadding, left: '50%', transform: 'translateX(-50%)' }}>
+                        Japan
+                    </div>
+
+                    {/* 下部右 */}
+                    <div style={{ ...textStyle, position: 'absolute', bottom: verticalPadding, right: edgePadding }}>
+                        Design Yano Taichi ⇔fukikaze46
+                    </div>
+                </motion.div>
+            );
+        };
+
+        function App() {
+            const [isLoading, setIsLoading] = useState(true);
+
+            const handleComplete = () => {
+                setIsLoading(false);
+                document.body.classList.remove('loading');
+                document.getElementById('main-content').classList.add('visible');
+                
+                // 光の軌跡を生成
+                const trailsContainer = document.getElementById('lightTrails');
+                for (let i = 0; i < 15; i++) {
+                    const trail = document.createElement('div');
+                    trail.className = 'light-trail';
+                    trail.style.left = Math.random() * 100 + '%';
+                    trail.style.animationDuration = (Math.random() * 8 + 6) + 's';
+                    trail.style.animationDelay = Math.random() * 8 + 's';
+                    trail.style.height = (Math.random() * 100 + 50) + 'px';
+                    trailsContainer.appendChild(trail);
+                }
+            };
+
+            return (
+                <AnimatePresence>
+                    {isLoading && <LoadingScreen onComplete={handleComplete} />}
+                </AnimatePresence>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('loading-root'));
+        root.render(<App />);
+    </script>
+
+    <!-- パララックス効果のスクリプト -->
+    <script>
+        window.addEventListener('scroll', () => {
+            const scrollY = window.scrollY;
+            const horse = document.querySelector('.horse-image');
+            const heroText = document.querySelector('.hero-text');
+            
+            if (horse && scrollY < window.innerHeight) {
+                horse.style.transform = `scale(${1 + scrollY * 0.0002}) translateY(${scrollY * 0.1}px)`;
+            }
+            
+            if (heroText && scrollY < window.innerHeight) {
+                heroText.style.transform = `translateY(${scrollY * 0.3}px)`;
+                heroText.style.opacity = 1 - (scrollY / window.innerHeight);
+            }
+        });
+    </script>
+</body>
+</html>
