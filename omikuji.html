@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>午年！爆走おみくじ競馬 - 2026</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'DotGothic16', monospace; }
+    </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+const HORSE_COLORS = [
+  { body: '#8B4513', mane: '#4a2508', jockey: '#FF0000' },
+  { body: '#1a1a1a', mane: '#000000', jockey: '#0066CC' },
+  { body: '#F5F5DC', mane: '#d4c896', jockey: '#00AA00' },
+  { body: '#CD853F', mane: '#8b5a2b', jockey: '#FF6600' },
+  { body: '#A0522D', mane: '#5c2e1a', jockey: '#AA00AA' },
+  { body: '#505050', mane: '#2a2a2a', jockey: '#FFFF00' },
+  { body: '#DAA520', mane: '#b8860b', jockey: '#00FFFF' },
+];
+
+const CPU_NAMES = ['ハヤテ', 'イナズマ', 'カゼマル', 'ヒカリ', 'ツバサ', 'リュウセイ'];
+
+const OMIKUJI_DATABASE = {
+  1: {
+    result: '大吉',
+    color: '#FFD700',
+    comment: '🎊 おめでとう！最高の運勢です！',
+    fortunes: [
+      '天馬空を駆けるが如く、全ての道が開かれるでしょう。千里を走る名馬の如き一年となります。',
+      '龍が雲を得て昇天するように、あなたの運気は天井知らずに上昇します。',
+      '春の野に咲き誇る桜の如く、あなたの才能が満開となる年です。'
+    ],
+    categories: {
+      願望: ['心に描きし夢、全て叶うでしょう', '望みは必ず成就します。迷わず進みなさい', '願いは天に届き、やがて花開くでしょう'],
+      待人: ['思いがけず早く来たりて、喜び大きし', '吉報と共に現れるでしょう', '待ち人は良き知らせを携えて参ります'],
+      失物: ['思わぬところより出でて、喜び倍増す', '必ず見つかります。高きところを探しなさい', 'すぐに手元に戻るでしょう'],
+      勝負: ['万馬券的中の大吉兆！勝負運最高潮なり', '本命一点買いで大勝利の予感', '三連単も夢じゃない！今日は全ツッパで吉']
+    }
+  },
+  2: {
+    result: '中吉',
+    color: '#FF8C00',
+    comment: '🌟 素晴らしい運勢です！',
+    fortunes: [
+      '良馬に鞭打たずとも自ら走るように、努力が自然と実を結ぶ年となるでしょう。',
+      '朝日が山を照らすように、あなたの前途は明るく照らされています。',
+      '清流が海へ向かうように、物事は順調に進むでしょう。'
+    ],
+    categories: {
+      願望: ['八分通り叶うでしょう。焦らずに待ちなさい', '大方は思い通りになります', '少しの辛抱で願いは叶います'],
+      待人: ['やや遅れて来たるも、良き縁なり', '待てば必ず来ます', '便りの後に現れるでしょう'],
+      失物: ['探せば出てくるでしょう。西の方角に注意', '時間はかかれど見つかります', '身近なところにあります'],
+      勝負: ['複勝で堅実に稼ぐが吉。大穴狙いは控えめに', '人気馬を信じれば報われる運勢', 'ワイドで手堅く。欲張らねば勝てます']
+    }
+  },
+  3: {
+    result: '小吉',
+    color: '#32CD32',
+    comment: '✨ 良い運勢です！',
+    fortunes: [
+      '馬も一歩から千里。小さな幸せが積み重なり、やがて大きな喜びとなるでしょう。',
+      '種を蒔けば芽が出るように、今の努力は必ず報われます。',
+      '小川が集まり大河となるように、小さな幸運が集まってきます。'
+    ],
+    categories: {
+      願望: ['小さき願いより叶い始めるでしょう', '半分は叶います。残りは来年に', '控えめな願いなら叶うでしょう'],
+      待人: ['来ますが、思っていた人とは違うかも', '遅くなりますが、来ないことはありません', '途中で寄り道して来るでしょう'],
+      失物: ['出てきますが、少し傷んでいるかも', '探し物は低いところにあります', '誰かが届けてくれるでしょう'],
+      勝負: ['単勝は避けて馬連で勝負が吉', '穴馬を一頭入れると面白いことに', '3着までなら入る運勢。複勝で堅実に']
+    }
+  },
+  4: {
+    result: '吉',
+    color: '#4169E1',
+    comment: '🍀 まずまずの運勢です',
+    fortunes: [
+      '駿馬も時に休息を取るように、焦らず着実に進めば道は開けるでしょう。',
+      '曇り空でも雲の上には太陽があるように、希望を持って進みなさい。',
+      '亀の歩みでも続ければ必ず目的地に着くでしょう。'
+    ],
+    categories: {
+      願望: ['半々といったところ。精進次第です', '叶うも叶わぬも五分五分なり', '努力すれば叶う可能性あり'],
+      待人: ['来るか来ないか、五分五分です', '連絡してみれば来るかもしれません', '待つより自分から動くが吉'],
+      失物: ['出てくるかどうか、微妙なところ', '見つかっても喜び半分かも', '諦めかけた頃に出てくるかも'],
+      勝負: ['今日は見送りが賢明。情報収集の日に', '少額で楽しむ程度が吉', 'パドックをよく見て判断すべし']
+    }
+  },
+  5: {
+    result: '末吉',
+    color: '#9370DB',
+    comment: '🌱 これから良くなる運勢です',
+    fortunes: [
+      '冬来たりなば春遠からじ。今は耐え忍ぶ時なれど、やがて運気は上向くでしょう。',
+      '夜明け前が最も暗いように、今が底。これからは上がるのみです。',
+      '馬の耳に念仏とならぬよう、周囲の助言に耳を傾けなさい。'
+    ],
+    categories: {
+      願望: ['今すぐは難しいが、いずれ叶う兆しあり', '遠回りしますが、最終的には叶うかも', '形を変えて叶うことがあるでしょう'],
+      待人: ['来ますが、かなり遅くなるでしょう', '待ち人より先に別の人が来るかも', '期待せず待てば、ふと現れます'],
+      失物: ['出てきますが、だいぶ先のことになりそう', '諦めた頃にひょっこり出てきます', '見つかっても役に立たないかも'],
+      勝負: ['大穴狙いで一発逆転を夢見るのも一興', '負けても勉強代と思えば末吉', '今日の負けは明日の勝ちの布石なり']
+    }
+  },
+  6: {
+    result: '凶',
+    color: '#708090',
+    comment: '💪 試練の時。乗り越えれば強くなれます',
+    fortunes: [
+      '駄馬に鞭打つが如く、今は何事も思うように進まぬ時期。しかし試練は人を強くします。',
+      '逆風に向かって走る馬のように、困難を乗り越える力を養う時です。',
+      '馬脚を露わすことなきよう、慎重に行動すべき時期です。'
+    ],
+    categories: {
+      願望: ['今は叶いません。時期を改めなさい', '望みは高すぎるかも。見直しが必要です', '叶わぬからこそ、次の目標が見えてきます'],
+      待人: ['来ません。自分から会いに行きなさい', '待ち人は道に迷っているようです', '来ても良い知らせではないかも'],
+      失物: ['見つかりません。諦めて新しいものを', '出てきても壊れているでしょう', '失くしたことで学ぶことがあります'],
+      勝負: ['今日は馬券売り場に近づくべからず', '勝負より貯金が吉。財布の紐を締めよ', 'レースは見るだけに。参加賞で我慢なり']
+    }
+  },
+  7: {
+    result: '大凶',
+    color: '#DC143C',
+    comment: '🔥 底を打った！あとは上がるだけ！',
+    fortunes: [
+      '落馬しても起き上がる者こそ真の騎手なり。この試練を乗り越えし時、汝は無敵となる。',
+      '馬には乗ってみよ、人には添うてみよ。失敗から学ぶことこそ最大の財産です。',
+      '痩せ馬に鞭の如く厳しい時期なれど、この苦労が未来の糧となります。'
+    ],
+    categories: {
+      願望: ['今年は諦めなさい。来年に賭けるのです', '叶わぬことで、真に大切なものが見えてきます', '望みは砕けますが、その破片から新たな夢が'],
+      待人: ['来ません。むしろ来ない方が良いでしょう', '待つだけ無駄です。次の出会いに期待を', '待ち人どころか、逃げ出したくなるかも'],
+      失物: ['二度と見つかりません。成仏させてあげなさい', '失くしたこと自体を忘れた方が幸せです', '出てきたとしても、もはや別物でしょう'],
+      勝負: ['馬券は全てハズレ。競馬新聞は枕にでも', '有り金全部スッて人生を見つめ直す日', '本命から大穴まで全滅の予感。観戦のみが吉']
+    }
+  }
+};
+
+const getRandomItem = (array) => array[Math.floor(Math.random() * array.length)];
+
+const generateOmikuji = (rank) => {
+  const data = OMIKUJI_DATABASE[rank];
+  return {
+    result: data.result,
+    color: data.color,
+    comment: data.comment,
+    fortune: getRandomItem(data.fortunes),
+    categories: {
+      願望: getRandomItem(data.categories.願望),
+      待人: getRandomItem(data.categories.待人),
+      失物: getRandomItem(data.categories.失物),
+      勝負: getRandomItem(data.categories.勝負),
+    }
+  };
+};
+
+function HorseOmikujiGame() {
+  const [scene, setScene] = useState('start');
+  const [playerName, setPlayerName] = useState('');
+  const [finishedHorses, setFinishedHorses] = useState([]);
+  const [playerRank, setPlayerRank] = useState(0);
+  const [omikujiData, setOmikujiData] = useState(null);
+  const [showDetail, setShowDetail] = useState(false);
+  const canvasRef = useRef(null);
+  const animationRef = useRef(null);
+  const gameStateRef = useRef({ horses: [], finished: [], cameraX: 0 });
+
+  const CANVAS_WIDTH = 640;
+  const CANVAS_HEIGHT = 480;
+  const TRACK_TOP = 80;
+  const LANE_HEIGHT = 52;
+  const COURSE_LENGTH = 1600;
+  const START_X = 100;
+  const GOAL_X = COURSE_LENGTH - 150;
+  const CAMERA_OFFSET = 450;
+  const CRIMSON = '#B80028';
+  const GOLD = '#F9CA00';
+
+  const drawHorse = useCallback((ctx, x, y, colors, frame, name, isPlayer, cameraX) => {
+    const screenX = x - cameraX;
+    if (screenX < -100 || screenX > CANVAS_WIDTH + 100) return;
+    
+    const p = 4;
+    const legFrame = Math.floor(frame / 3) % 4;
+    const legPatterns = [
+      { fl: 0, fr: 2, bl: 2, br: 0 },
+      { fl: 1, fr: 0, bl: 0, br: 1 },
+      { fl: 2, fr: 0, bl: 0, br: 2 },
+      { fl: 0, fr: 1, bl: 1, br: 0 },
+    ];
+    const leg = legPatterns[legFrame];
+
+    ctx.fillStyle = colors.body;
+    for (let i = 0; i < 10; i++) {
+      for (let j = 0; j < 6; j++) {
+        ctx.fillRect(screenX + i * p, y + j * p, p, p);
+      }
+    }
+    for (let i = 0; i < 4; i++) {
+      for (let j = 0; j < 5; j++) {
+        ctx.fillRect(screenX + (9 + i) * p, y + (j - 3) * p, p, p);
+      }
+    }
+    for (let i = 0; i < 5; i++) {
+      for (let j = 0; j < 4; j++) {
+        ctx.fillRect(screenX + (12 + i) * p, y + (j - 5) * p, p, p);
+      }
+    }
+    ctx.fillRect(screenX + 17 * p, y - 3 * p, p, p * 2);
+    
+    ctx.fillStyle = colors.mane;
+    for (let i = 0; i < 5; i++) {
+      ctx.fillRect(screenX + (9 + i) * p, y - 4 * p, p, p);
+      if (i < 3) ctx.fillRect(screenX + (10 + i) * p, y - 5 * p, p, p);
+    }
+    
+    const tailWave = Math.sin(frame * 0.3) * 2;
+    for (let i = 0; i < 4; i++) {
+      ctx.fillRect(screenX - p + tailWave, y + (i + 2) * p, p, p);
+    }
+    ctx.fillRect(screenX - 2 * p + tailWave, y + 5 * p, p, p);
+    
+    ctx.fillStyle = colors.body;
+    ctx.fillRect(screenX + 1 * p, y + 6 * p, p, (4 + leg.bl) * p);
+    ctx.fillRect(screenX + 3 * p, y + 6 * p, p, (4 + leg.br) * p);
+    ctx.fillRect(screenX + 7 * p, y + 6 * p, p, (4 + leg.fl) * p);
+    ctx.fillRect(screenX + 9 * p, y + 6 * p, p, (4 + leg.fr) * p);
+    
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(screenX + 1 * p, y + (9 + leg.bl) * p, p, p);
+    ctx.fillRect(screenX + 3 * p, y + (9 + leg.br) * p, p, p);
+    ctx.fillRect(screenX + 7 * p, y + (9 + leg.fl) * p, p, p);
+    ctx.fillRect(screenX + 9 * p, y + (9 + leg.fr) * p, p, p);
+    
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(screenX + 15 * p, y - 4 * p, p, p);
+    
+    ctx.fillStyle = colors.body;
+    ctx.fillRect(screenX + 13 * p, y - 6 * p, p, p);
+    ctx.fillRect(screenX + 14 * p, y - 7 * p, p, p);
+    
+    ctx.fillStyle = colors.jockey;
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
+        ctx.fillRect(screenX + (5 + i) * p, y + (j - 2) * p, p, p);
+      }
+    }
+    ctx.fillStyle = '#FFD9B3';
+    ctx.fillRect(screenX + 6 * p, y - 4 * p, p * 2, p * 2);
+    ctx.fillStyle = colors.jockey;
+    ctx.fillRect(screenX + 6 * p, y - 5 * p, p * 2, p);
+    
+    ctx.fillStyle = isPlayer ? GOLD : '#FFFFFF';
+    ctx.font = "bold 14px 'DotGothic16', monospace";
+    ctx.textAlign = 'center';
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 3;
+    ctx.strokeText(name, screenX + 32, y - 32);
+    ctx.fillText(name, screenX + 32, y - 32);
+    
+    if (isPlayer) {
+      ctx.fillStyle = GOLD;
+      ctx.font = "bold 16px monospace";
+      ctx.fillText('▼', screenX + 32, y - 42);
+    }
+  }, [CANVAS_WIDTH, GOLD]);
+
+  const drawBackground = useCallback((ctx, cameraX) => {
+    ctx.fillStyle = CRIMSON;
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    
+    ctx.fillStyle = GOLD;
+    ctx.fillRect(0, 0, CANVAS_WIDTH, 12);
+    
+    const fenceOffset = cameraX % 40;
+    for (let i = -1; i < CANVAS_WIDTH / 40 + 2; i++) {
+      const fenceX = i * 40 - fenceOffset;
+      ctx.fillStyle = GOLD;
+      ctx.fillRect(fenceX, 0, 8, TRACK_TOP - 10);
+      ctx.fillStyle = '#C9A000';
+      ctx.fillRect(fenceX + 6, 0, 2, TRACK_TOP - 10);
+    }
+    
+    ctx.fillStyle = GOLD;
+    ctx.fillRect(0, 20, CANVAS_WIDTH, 6);
+    ctx.fillRect(0, 40, CANVAS_WIDTH, 6);
+    ctx.fillRect(0, TRACK_TOP - 16, CANVAS_WIDTH, 8);
+    
+    ctx.fillStyle = '#1E8E3E';
+    ctx.fillRect(0, TRACK_TOP, CANVAS_WIDTH, LANE_HEIGHT * 7 + 20);
+    
+    ctx.fillStyle = '#177332';
+    for (let i = 0; i < 150; i++) {
+      const baseX = (i * 47) % 800;
+      const gx = (baseX - (cameraX % 800) + 800) % 800;
+      const gy = TRACK_TOP + (i * 23) % (LANE_HEIGHT * 7);
+      ctx.fillRect(gx, gy, 3, 3);
+    }
+    
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 8]);
+    const dashOffset = cameraX % 16;
+    ctx.lineDashOffset = -dashOffset;
+    for (let i = 1; i < 7; i++) {
+      const lineY = TRACK_TOP + i * LANE_HEIGHT;
+      ctx.beginPath();
+      ctx.moveTo(0, lineY);
+      ctx.lineTo(CANVAS_WIDTH, lineY);
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    ctx.lineDashOffset = 0;
+    
+    for (let dist = 0; dist <= COURSE_LENGTH; dist += 100) {
+      const markerX = START_X + dist - cameraX;
+      if (markerX > -50 && markerX < CANVAS_WIDTH + 50) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.fillRect(markerX, TRACK_TOP, 2, LANE_HEIGHT * 7);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.font = "10px 'DotGothic16', monospace";
+        ctx.textAlign = 'center';
+        ctx.fillText(`${dist}m`, markerX, TRACK_TOP - 5);
+      }
+    }
+    
+    const startScreenX = START_X - cameraX;
+    if (startScreenX > -20 && startScreenX < CANVAS_WIDTH + 20) {
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(startScreenX, TRACK_TOP, 6, LANE_HEIGHT * 7);
+      ctx.fillStyle = GOLD;
+      ctx.font = "bold 14px 'DotGothic16', monospace";
+      ctx.textAlign = 'center';
+      ctx.fillText('START', startScreenX, TRACK_TOP - 8);
+    }
+    
+    const goalScreenX = GOAL_X - cameraX;
+    if (goalScreenX > -50 && goalScreenX < CANVAS_WIDTH + 50) {
+      const checkerSize = 8;
+      for (let row = 0; row < Math.ceil(LANE_HEIGHT * 7 / checkerSize); row++) {
+        for (let col = 0; col < 4; col++) {
+          ctx.fillStyle = (row + col) % 2 === 0 ? '#FFFFFF' : '#000000';
+          ctx.fillRect(goalScreenX + col * checkerSize, TRACK_TOP + row * checkerSize, checkerSize, checkerSize);
+        }
+      }
+      ctx.fillStyle = GOLD;
+      ctx.font = "bold 16px 'DotGothic16', monospace";
+      ctx.textAlign = 'center';
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 3;
+      ctx.strokeText('GOAL', goalScreenX + 16, TRACK_TOP - 8);
+      ctx.fillText('GOAL', goalScreenX + 16, TRACK_TOP - 8);
+    }
+    
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, CANVAS_HEIGHT - 70, CANVAS_WIDTH, 70);
+    ctx.strokeStyle = GOLD;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(2, CANVAS_HEIGHT - 68, CANVAS_WIDTH - 4, 66);
+  }, [CANVAS_WIDTH, CANVAS_HEIGHT, TRACK_TOP, LANE_HEIGHT, CRIMSON, GOLD, START_X, GOAL_X, COURSE_LENGTH]);
+
+  const initRace = useCallback(() => {
+    const initialHorses = [];
+    const name = playerName.trim() || 'プレイヤー';
+    
+    for (let i = 0; i < 7; i++) {
+      initialHorses.push({
+        id: i,
+        name: i === 0 ? name : CPU_NAMES[i - 1],
+        x: START_X,
+        lane: i,
+        speed: 0,
+        baseSpeed: 2.8 + Math.random() * 0.8,
+        colors: HORSE_COLORS[i],
+        isPlayer: i === 0,
+        frame: 0,
+        finished: false,
+        boostTimer: 0,
+        slowTimer: 0,
+      });
+    }
+    
+    const lanes = [0, 1, 2, 3, 4, 5, 6];
+    for (let i = lanes.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [lanes[i], lanes[j]] = [lanes[j], lanes[i]];
+    }
+    initialHorses.forEach((horse, idx) => {
+      horse.lane = lanes[idx];
+    });
+    
+    gameStateRef.current = { horses: initialHorses, finished: [], cameraX: 0 };
+    setFinishedHorses([]);
+  }, [playerName, START_X]);
+
+  const gameLoop = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    
+    const state = gameStateRef.current;
+    const leading = [...state.horses].sort((a, b) => b.x - a.x);
+    const targetCameraX = Math.max(0, leading[0].x - CAMERA_OFFSET);
+    state.cameraX += (targetCameraX - state.cameraX) * 0.12;
+    
+    drawBackground(ctx, state.cameraX);
+    
+    let allFinished = true;
+    const sortedHorses = [...state.horses].sort((a, b) => a.lane - b.lane);
+    
+    sortedHorses.forEach((horse) => {
+      if (!horse.finished) {
+        allFinished = false;
+        
+        if (Math.random() < 0.03) horse.boostTimer = 30 + Math.floor(Math.random() * 30);
+        if (Math.random() < 0.02) horse.slowTimer = 25 + Math.floor(Math.random() * 25);
+        
+        let currentSpeed = horse.baseSpeed;
+        if (horse.boostTimer > 0) { currentSpeed *= 1.8; horse.boostTimer--; }
+        if (horse.slowTimer > 0) { currentSpeed *= 0.3; horse.slowTimer--; }
+        currentSpeed += (Math.random() - 0.5) * 0.6;
+        currentSpeed = Math.max(1.2, currentSpeed);
+        
+        const playerFinished = state.finished.some(h => h.isPlayer);
+        if (playerFinished && !horse.isPlayer) currentSpeed *= 3.0;
+        
+        horse.x += currentSpeed;
+        horse.frame++;
+        
+        if (horse.x >= GOAL_X) {
+          horse.finished = true;
+          horse.x = GOAL_X;
+          state.finished.push({ id: horse.id, name: horse.name, isPlayer: horse.isPlayer, rank: state.finished.length + 1 });
+        }
+      }
+      
+      const y = TRACK_TOP + horse.lane * LANE_HEIGHT + 8;
+      drawHorse(ctx, horse.x, y, horse.colors, horse.frame, horse.name, horse.isPlayer, state.cameraX);
+    });
+    
+    const remainingDist = Math.max(0, Math.round(GOAL_X - leading[0].x));
+    ctx.fillStyle = GOLD;
+    ctx.font = "bold 16px 'DotGothic16', monospace";
+    ctx.textAlign = 'right';
+    ctx.fillText(`残り ${remainingDist}m`, CANVAS_WIDTH - 20, TRACK_TOP - 25);
+    
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = "bold 20px 'DotGothic16', monospace";
+    ctx.textAlign = 'left';
+    
+    const leaderName = leading[0]?.name || '';
+    const secondName = leading[1]?.name || '';
+    const progress = (leading[0]?.x - START_X) / (GOAL_X - START_X);
+    
+    let commentary;
+    if (state.finished.length >= 5) commentary = 'ゴールラッシュ！続々とゴールイン！';
+    else if (state.finished.length >= 3) commentary = `${state.finished[state.finished.length-1].name}もゴール！`;
+    else if (state.finished.length >= 1) commentary = `先頭は${state.finished[0].name}！勝負あり！`;
+    else if (progress > 0.85) commentary = `最後の直線！${leaderName}先頭！`;
+    else if (progress > 0.7) commentary = `第4コーナーをまわって${leaderName}！`;
+    else if (progress > 0.5) {
+      const gap = leading[0].x - leading[1].x;
+      commentary = gap < 30 ? `${leaderName}と${secondName}が並んだ！` : `${leaderName}がリード！追う${secondName}！`;
+    } else if (progress > 0.3) commentary = `向こう正面！${leaderName}が引っ張る！`;
+    else if (progress > 0.15) commentary = `そとから${leaderName}がつっこんできた！`;
+    else commentary = 'スタート！各馬一斉に飛び出した！';
+    
+    ctx.fillText(commentary, 20, CANVAS_HEIGHT - 35);
+    
+    ctx.font = "14px 'DotGothic16', monospace";
+    ctx.fillStyle = GOLD;
+    ctx.textAlign = 'right';
+    ctx.fillText(`ゴール: ${state.finished.length}/7頭`, CANVAS_WIDTH - 20, CANVAS_HEIGHT - 35);
+    
+    ctx.textAlign = 'left';
+    ctx.font = "12px 'DotGothic16', monospace";
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText('現在順位:', 20, CANVAS_HEIGHT - 12);
+    leading.slice(0, 5).forEach((horse, idx) => {
+      ctx.fillStyle = horse.isPlayer ? GOLD : '#FFFFFF';
+      ctx.fillText(`${idx + 1}.${horse.name}`, 100 + idx * 100, CANVAS_HEIGHT - 12);
+    });
+    
+    if (allFinished) {
+      const playerResult = state.finished.find(h => h.isPlayer);
+      const rank = playerResult ? playerResult.rank : 7;
+      setPlayerRank(rank);
+      setFinishedHorses(state.finished);
+      setOmikujiData(generateOmikuji(rank));
+      setScene('result');
+      return;
+    }
+    
+    animationRef.current = requestAnimationFrame(gameLoop);
+  }, [drawBackground, drawHorse, CANVAS_WIDTH, CANVAS_HEIGHT, TRACK_TOP, LANE_HEIGHT, CAMERA_OFFSET, START_X, GOAL_X, GOLD]);
+
+  const startRace = useCallback(() => {
+    if (!playerName.trim()) { alert('名前を入力してください！'); return; }
+    setShowDetail(false);
+    setScene('race');
+  }, [playerName]);
+
+  useEffect(() => {
+    if (scene === 'race') {
+      initRace();
+      const timer = setTimeout(() => { animationRef.current = requestAnimationFrame(gameLoop); }, 500);
+      return () => { clearTimeout(timer); if (animationRef.current) cancelAnimationFrame(animationRef.current); };
+    }
+  }, [scene, initRace, gameLoop]);
+
+  if (scene === 'start') {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: `linear-gradient(180deg, ${CRIMSON} 0%, #6a0018 100%)`, fontFamily: "'DotGothic16', monospace" }}>
+        <div className="text-center p-6 md:p-10 rounded-lg w-full max-w-lg" style={{ background: 'linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%)', border: `6px solid ${GOLD}`, boxShadow: `0 0 40px ${GOLD}40` }}>
+          <div className="mb-8">
+            <div style={{ color: GOLD }} className="text-base md:text-lg mb-3">🐴 2026年 干支ゲーム 🐴</div>
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-3" style={{ textShadow: `3px 3px ${CRIMSON}`, letterSpacing: '4px' }}>午年！爆走</h1>
+            <h1 className="text-3xl md:text-4xl font-bold" style={{ color: GOLD, textShadow: '3px 3px #000', letterSpacing: '4px' }}>おみくじ競馬</h1>
+          </div>
+          <div className="text-xl mb-8" style={{ color: GOLD }}>{'🏇'.repeat(7)}</div>
+          <div className="mb-8">
+            <label className="block text-white text-lg mb-3">あなたの名前（カタカナ）</label>
+            <input type="text" value={playerName} onChange={(e) => setPlayerName(e.target.value)} placeholder="ナマエ" maxLength={6} className="w-full max-w-xs px-6 py-4 text-center text-xl rounded" style={{ background: '#f0e6d3', border: `4px solid ${GOLD}`, fontFamily: "'DotGothic16', monospace" }} />
+          </div>
+          <button onClick={startRace} className="px-10 py-5 text-2xl font-bold text-white rounded transition-all hover:scale-105 active:scale-95" style={{ background: `linear-gradient(180deg, ${CRIMSON} 0%, #6a0018 100%)`, border: `4px solid ${GOLD}`, boxShadow: `0 4px 0 #4a0000`, textShadow: '2px 2px #000' }}>🏁 出走！ 🏁</button>
+          <div className="mt-8 text-gray-400 text-sm md:text-base">
+            <p>7頭でレース！順位でおみくじが決まる！</p>
+            <p className="mt-1">1位＝大吉 〜 7位＝大凶</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (scene === 'race') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-2 md:p-4" style={{ background: '#000000', fontFamily: "'DotGothic16', monospace" }}>
+        <div className="w-full max-w-3xl">
+          <div className="text-center mb-3">
+            <h2 className="text-xl md:text-2xl font-bold" style={{ color: GOLD, textShadow: '2px 2px #000' }}>🏇 レース進行中！ 🏇</h2>
+          </div>
+          <div className="w-full" style={{ border: `6px solid ${GOLD}`, borderRadius: '4px', boxShadow: `0 0 30px ${GOLD}30` }}>
+            <canvas ref={canvasRef} width={CANVAS_WIDTH} height={CANVAS_HEIGHT} style={{ display: 'block', width: '100%', height: 'auto', imageRendering: 'pixelated' }} />
+          </div>
+          <div className="mt-4 flex flex-wrap justify-center gap-4 md:gap-8 text-white text-sm md:text-base">
+            <span>▼ = あなた</span>
+            <span style={{ color: GOLD }}>金文字 = あなたの馬</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (scene === 'result' && omikujiData) {
+    if (showDetail) {
+      return (
+        <div className="min-h-screen flex items-center justify-center p-2 md:p-4" style={{ background: `linear-gradient(180deg, ${CRIMSON} 0%, #4a0018 100%)`, fontFamily: "'DotGothic16', monospace" }}>
+          <div className="w-full max-w-md" style={{ background: 'linear-gradient(180deg, #f5e6d3 0%, #e8d4b8 100%)', border: `4px solid ${GOLD}`, borderRadius: '8px', boxShadow: `0 0 40px ${GOLD}50` }}>
+            <div className="text-center py-5" style={{ background: `linear-gradient(180deg, ${CRIMSON} 0%, #6a0018 100%)`, borderBottom: `4px solid ${GOLD}` }}>
+              <div style={{ color: GOLD }} className="text-sm mb-1">午年 開運おみくじ</div>
+              <div className="text-white text-3xl md:text-4xl font-bold" style={{ textShadow: '2px 2px #000' }}>御 神 籤</div>
+            </div>
+            <div className="text-center py-6" style={{ borderBottom: `2px dashed ${CRIMSON}` }}>
+              <div className="text-gray-600 text-base mb-2">第{playerRank}着</div>
+              <div className="text-6xl md:text-7xl font-bold mb-3" style={{ color: omikujiData.color, textShadow: '3px 3px rgba(0,0,0,0.2)' }}>{omikujiData.result}</div>
+              <div className="text-base text-gray-700 px-6">{omikujiData.comment}</div>
+            </div>
+            <div className="px-4 md:px-6 py-4" style={{ borderBottom: `2px dashed ${CRIMSON}` }}>
+              <div className="text-center text-sm text-gray-500 mb-2">【運勢】</div>
+              <p className="text-gray-800 text-base leading-relaxed text-center italic">「{omikujiData.fortune}」</p>
+            </div>
+            <div className="px-3 md:px-4 py-4 space-y-3">
+              {Object.entries(omikujiData.categories).map(([category, text]) => (
+                <div key={category} className="flex items-start gap-3 p-3 rounded" style={{ background: 'rgba(184, 0, 40, 0.1)' }}>
+                  <div className="flex-shrink-0 w-14 text-center py-2 rounded text-white text-sm font-bold" style={{ background: category === '勝負' ? GOLD : CRIMSON }}>{category}</div>
+                  <div className="flex-1 text-gray-700 text-base leading-relaxed">{text}</div>
+                </div>
+              ))}
+            </div>
+            <div className="text-center py-5" style={{ background: 'linear-gradient(180deg, #d4c4a8 0%, #c4b498 100%)', borderTop: `2px solid ${CRIMSON}` }}>
+              <div className="text-sm text-gray-600 mb-4">🐴 2026年 午年 🐴</div>
+              <button onClick={() => setShowDetail(false)} className="px-8 py-3 text-base font-bold text-white rounded transition-all hover:scale-105" style={{ background: 'linear-gradient(180deg, #4a4a4a 0%, #2a2a2a 100%)', border: '3px solid #666' }}>← 結果に戻る</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="min-h-screen flex items-center justify-center p-2 md:p-4" style={{ background: playerRank <= 3 ? `linear-gradient(180deg, #3a2a00 0%, #1a1200 100%)` : `linear-gradient(180deg, ${CRIMSON} 0%, #4a0018 100%)`, fontFamily: "'DotGothic16', monospace" }}>
+        <div className="text-center p-6 md:p-8 rounded-lg w-full max-w-lg" style={{ background: 'rgba(0, 0, 0, 0.7)', border: `6px solid ${omikujiData.color}`, boxShadow: `0 0 40px ${omikujiData.color}50` }}>
+          <div className="text-white text-xl mb-3">🏁 レース結果 🏁</div>
+          <div className="text-7xl mb-4">{playerRank === 1 ? '🥇' : playerRank === 2 ? '🥈' : playerRank === 3 ? '🥉' : '🏇'}</div>
+          <div className="text-white text-2xl md:text-3xl mb-4" style={{ textShadow: '2px 2px #000' }}>{playerName || 'プレイヤー'}<br /><span className="text-5xl font-bold" style={{ color: omikujiData.color }}>{playerRank}着！</span></div>
+          <div className="my-6 p-6 rounded" style={{ background: 'linear-gradient(180deg, #f0e6d3 0%, #d4c4a8 100%)', border: `4px solid ${GOLD}` }}>
+            <div className="text-base text-gray-600 mb-2">おみくじ結果</div>
+            <div className="text-6xl font-bold mb-3" style={{ color: omikujiData.color, textShadow: '3px 3px rgba(0,0,0,0.2)' }}>{omikujiData.result}</div>
+            <div className="text-gray-700 text-base leading-relaxed">{omikujiData.comment}</div>
+          </div>
+          <div className="mb-6 text-left p-4 rounded" style={{ background: 'rgba(255,255,255,0.1)' }}>
+            <div className="text-white text-base mb-3 text-center">📋 全着順 📋</div>
+            <div className="grid grid-cols-1 gap-2 text-sm md:text-base">
+              {finishedHorses.map((horse, idx) => (
+                <div key={horse.id} className={`flex justify-between px-3 py-2 rounded ${horse.isPlayer ? 'font-bold' : 'text-white'}`} style={{ background: horse.isPlayer ? GOLD : 'transparent', color: horse.isPlayer ? '#000' : '#fff' }}>
+                  <span>{idx + 1}着</span>
+                  <span>{horse.name}</span>
+                  <span style={{ color: horse.isPlayer ? '#000' : '#999' }}>{OMIKUJI_DATABASE[idx + 1].result}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <button onClick={() => setShowDetail(true)} className="px-10 py-5 text-xl font-bold text-white rounded transition-all hover:scale-105 active:scale-95" style={{ background: `linear-gradient(180deg, ${omikujiData.color} 0%, ${omikujiData.color}88 100%)`, border: `4px solid ${GOLD}`, boxShadow: '0 4px 0 rgba(0,0,0,0.4)', textShadow: '2px 2px #000' }}>📜 詳しく見る 📜</button>
+          <div className="mt-5 text-gray-400 text-sm">2026年も良い年になりますように！🐴</div>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<HorseOmikujiGame />);
+</script>
+</body>
+</html>
