@@ -3,164 +3,266 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Layout Check</title>
-  <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;900&display=swap" rel="stylesheet">
+  <title>丙午 2026 - HINOEUMA</title>
+  
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700;900&family=DotGothic16&display=swap" rel="stylesheet">
+  
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Shippori Mincho', serif;
-      background-color: #f0f0f0;
-      overflow-x: hidden; /* 横スクロール防止 */
-    }
-
-    /* ▼ メインビジュアルのコンテナ（ポスターのようなレイアウト） */
-    .hero-container {
-      position: relative;
-      width: 100%;
-      height: 100vh; /* 画面いっぱいの高さ */
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* 1. 背景の分割（上：白、下：赤） */
-    .bg-top {
-      height: 45%; /* 上45%が白 */
-      background-color: #ffffff;
-      width: 100%;
-    }
-    .bg-bottom {
-      height: 55%; /* 下55%が赤 */
-      background-color: #B80028;
-      width: 100%;
-      position: relative;
-    }
-
-    /* 2. 左端の巨大な英語縦書き */
-    .side-text {
-      position: absolute;
-      top: 0;
-      left: 2%;
-      height: 100%;
-      writing-mode: vertical-rl; /* 縦書き */
-      text-orientation: mixed;
-      font-family: 'Times New Roman', serif; /* 明朝系の英語フォント */
-      font-size: min(12vh, 8vw); /* 画面サイズに合わせて調整 */
-      font-weight: 100;
-      color: #111; /* 黒文字 */
-      line-height: 1;
-      z-index: 10;
-      letter-spacing: 0.05em;
-      white-space: nowrap;
-    }
-    /* 下半分の文字色を反転させるギミック（mix-blend-modeは背景によるので今回は黒のまま透過で調整） */
-    .side-text {
-      mix-blend-mode: difference; /* 背景が白なら黒、赤なら補色っぽくなる演出 */
-      color: #fff; /* differenceを使うので白指定にすると、白背景で黒、赤背景で青緑っぽくなる */
-      /* もし完全に黒にしたい場合は mix-blend-mode を外して color: #000 にしてください */
-      mix-blend-mode: normal;
-      color: #000;
-      opacity: 0.8;
-    }
-
-    /* 3. 右上の巨大な「丙午」 */
-    .kanji-big {
-      position: absolute;
-      top: -5%;
-      right: -5%;
-      font-size: 40vh; /* 画面の40%の大きさ */
-      font-weight: 900;
-      color: #C5A059; /* 金色っぽい色 */
-      line-height: 1;
-      z-index: 1;
-      opacity: 0.9;
-    }
-    .kanji-big .char-2 {
-      display: block;
-      margin-top: -0.2em; /* 文字を少し重ねる */
-      margin-left: 0.5em;
-    }
-    /* 下の「午」は赤背景にも被るので色調整が必要かもですが、一旦配置優先 */
-
-    /* 4. 中央の馬（重なり） */
-    .center-horse {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -60%); /* 中央配置 */
-      width: 60%; /* 画像サイズ */
-      max-width: 600px;
-      z-index: 5;
-    }
-
-    /* 5. 挨拶文エリア（赤背景の中） */
-    .greeting-text {
-      position: absolute;
-      bottom: 10%;
-      left: 20%; /* 左の英語と被らないように */
-      color: rgba(255, 255, 255, 0.8);
-      font-size: 0.9rem;
-      line-height: 2;
-      z-index: 6;
-      text-align: left;
-    }
-    .greeting-title {
-      font-size: 1.5rem;
-      font-weight: bold;
-      margin-bottom: 1rem;
-      color: #fff;
-    }
-
-    /* レスポンシブ調整（スマホ） */
-    @media (max-width: 768px) {
-      .side-text { font-size: 8vh; left: 10px; }
-      .kanji-big { font-size: 30vh; right: -10%; }
-      .center-horse { width: 90%; transform: translate(-45%, -55%); }
-      .greeting-text { left: 15%; font-size: 0.75rem; bottom: 5%; width: 80%; }
-    }
+    body { font-family: 'Shippori Mincho', serif; background-color: #fff; overflow-x: hidden; }
+    /* 縦書き用 */
+    .vertical-text { writing-mode: vertical-rl; text-orientation: mixed; }
+    /* ドット絵用（画像をぼかさずクッキリ表示） */
+    .pixelated { image-rendering: pixelated; }
+    /* ブレンドモード用（背景色に合わせて文字色を反転） */
+    .mix-difference { mix-blend-mode: difference; color: white; }
   </style>
 </head>
 <body>
+  <div id="root"></div>
 
-  <div class="hero-container">
-    <div class="bg-top"></div>
-    <div class="bg-bottom">
-      <div class="greeting-text">
-        <div class="greeting-title">丙午</div>
-        <p>
-          謹んで新春のお慶びを申し上げます。<br><br>
-          六十年の時を経て巡りきたる「丙午（ひのえうま）」。<br>
-          太陽と生命力が重なるこの年は、強烈な陽の気であらゆる厄災を焼き払います。<br>
-          大地を蹴る炎の馬のごとく、今こそ内なる情熱を解き放つ時。<br>
-          新たな時代を切り拓く一年でありたいと願います。
-        </p>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+    const { motion, AnimatePresence, useScroll, useTransform } = window.Motion;
+
+    // ==========================================
+    // ⚙️ 設定項目
+    // ==========================================
+    // ★ここにゲームのURLを貼り付けてください★
+    const GAME_URL = "https://google.com"; 
+
+    const ASSETS = {
+      // ローディング用（img1〜img6は以前作成したものを使用）
+      fonts: ['./img1.png', './img2.png', './img3.png', './img4.png', './img5.png', './img6.png'],
+      stamp: './loading.png',
+      // メイン用（今回リネームしたもの）
+      bg_text: './bg_text.jpg',
+      horse: './horse.jpg',
+      shrine: './shrine.jpg',
+      girl: './girl.png',
+    };
+
+    // ==========================================
+    // ❄️ 雪のエフェクト (ドット絵用)
+    // ==========================================
+    const SnowEffect = () => (
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-20">
+        {Array.from({ length: 50 }).map((_, i) => (
+          <motion.div
+            key={i}
+            // ドット絵らしく四角い雪にする
+            className="absolute bg-white opacity-80"
+            initial={{ x: Math.random() * 100 + "%", y: -10 }}
+            animate={{ y: "110vh", x: `calc(${Math.random() * 100}% + ${Math.random() * 20 - 10}px)` }}
+            transition={{ duration: 4 + Math.random() * 4, repeat: Infinity, ease: "linear", delay: Math.random() * 5 }}
+            style={{ 
+              width: Math.random() > 0.5 ? '4px' : '8px', 
+              height: Math.random() > 0.5 ? '4px' : '8px',
+              imageRendering: 'pixelated'
+            }}
+          />
+        ))}
       </div>
-    </div>
+    );
 
-    <div class="side-text">
-      Happy New Yare2026
-    </div>
+    // ==========================================
+    // 🔄 ローディング画面（前回と同じ）
+    // ==========================================
+    const LoadingScreen = ({ onComplete }) => {
+      const [progress, setProgress] = useState(0);
+      const [fontIndex, setFontIndex] = useState(0);
+      const [showStamp, setShowStamp] = useState(false);
+      const [slideUp, setSlideUp] = useState(false);
 
-    <div class="kanji-big">
-      <div>丙</div>
-      <div class="char-2" style="color: #9f803e; /* 下の文字は少し暗く? */">午</div>
-    </div>
+      useEffect(() => {
+        const timer = setInterval(() => setProgress(p => (p >= 100 ? 100 : p + 1)), 30);
+        const flick = setInterval(() => setFontIndex(i => (i + 1) % ASSETS.fonts.length), 150);
+        return () => { clearInterval(timer); clearInterval(flick); };
+      }, []);
 
-    <img src="./horse.jpg" class="center-horse" alt="丙午の馬">
+      useEffect(() => {
+        if (progress === 100) {
+          setTimeout(() => setShowStamp(true), 400);
+          setTimeout(() => setSlideUp(true), 2000);
+          setTimeout(onComplete, 2700);
+        }
+      }, [progress, onComplete]);
 
-  </div>
+      return (
+        <motion.div
+          className="fixed inset-0 z-[100] bg-white flex flex-col items-center justify-center"
+          animate={slideUp ? { y: '-100%' } : { y: 0 }}
+          transition={{ duration: 0.8, ease: [0.76, 0, 0.24, 1] }}
+        >
+          <div className="absolute top-6 left-6 text-xs tracking-widest">2025→2026</div>
+          <div className="absolute top-6 right-6 text-xs tracking-widest">hello 2026</div>
+          
+          <div className="relative w-full max-w-2xl h-64 flex items-center justify-center">
+             {!showStamp && ASSETS.fonts.map((src, i) => (
+               <img key={i} src={src} className="absolute h-32 md:h-48 object-contain transition-opacity duration-75" style={{ opacity: fontIndex === i ? 1 : 0 }} />
+             ))}
+             <AnimatePresence>
+               {showStamp && (
+                 <motion.img src={ASSETS.stamp} initial={{ scale: 3, opacity: 0, rotate: -5 }} animate={{ scale: 1, opacity: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 200 }} className="absolute h-48 md:h-64 object-contain" />
+               )}
+             </AnimatePresence>
+          </div>
+          <div className="absolute bottom-1/4 tracking-[0.3em] font-['DotGothic16']">loading - {String(progress).padStart(3, '0')}%</div>
+        </motion.div>
+      );
+    };
 
-  <div style="position: relative;">
-    <img src="./shrine.jpg" style="width: 100%; display: block;" alt="神社">
-    </div>
+    // ==========================================
+    // 🏠 メインアプリ
+    // ==========================================
+    const App = () => {
+      const [isLoading, setIsLoading] = useState(true);
+      const { scrollY } = useScroll();
+      
+      // パララックス用（スクロールに応じた移動量）
+      const y_slow = useTransform(scrollY, [0, 1000], [0, 150]);
+      const y_fast = useTransform(scrollY, [0, 1000], [0, -200]);
 
-  <div style="background: white; padding: 4rem 2rem; display: flex; justify-content: center; align-items: center; gap: 2rem; flex-wrap: wrap;">
-    <div style="max-width: 500px;">
-      <h2 style="color: #B80028; font-weight: bold; margin-bottom: 1rem;">まだ全然やることが終わってない！！</h2>
-      <p style="font-size: 0.9rem; line-height: 1.8;">旧年中は大変お世話になりました...</p>
-    </div>
-    <img src="./girl.png" style="width: 200px;" alt="女の子">
-  </div>
+      return (
+        <>
+          <AnimatePresence>
+            {isLoading && <LoadingScreen onComplete={() => setIsLoading(false)} />}
+          </AnimatePresence>
 
+          <div className="relative font-sans">
+            
+            {/* ========================================
+              1. Hero Section (ポスター風レイアウト)
+              ========================================
+              ここを大胆に変更しました。絶対配置(absolute)で要素を重ねています。
+            */}
+            <section className="relative h-screen w-full overflow-hidden bg-[#B80028]">
+              
+              {/* 背景（上半分を白にするための要素） */}
+              <div className="absolute top-0 left-0 w-full h-[55%] bg-white z-0"></div>
+
+              {/* 左側の巨大な縦書き英語 (mix-blend-modeで色を反転) */}
+              <div className="absolute top-0 left-4 h-full z-20 mix-difference pointer-events-none">
+                <h2 className="vertical-text text-[12vh] leading-none font-thin tracking-wider opacity-90 font-serif">
+                  Happy New Yare2026
+                </h2>
+              </div>
+
+              {/* 右上の巨大な「丙午」 (金色) */}
+              <motion.div style={{ y: y_slow }} className="absolute -top-[5%] -right-[10%] z-10 pointer-events-none select-none">
+                <h1 className="text-[45vh] font-black text-[#C5A059] leading-none opacity-90 font-serif">
+                  丙<br/>
+                  <span className="ml-[0.5em] -mt-[0.2em] block text-[#9f803e]">午</span>
+                </h1>
+              </motion.div>
+
+              {/* 中央の馬 (境界線をまたいで配置＆浮遊アニメーション) */}
+              <motion.div 
+                className="absolute top-1/2 left-1/2 z-30 w-[80%] md:w-[60%] max-w-[700px]"
+                style={{ x: '-50%', y: '-55%' }} // 中心から少し上にずらす
+                animate={{ y: ['-55%', '-58%', '-55%'] }} // ふわふわ浮遊
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              >
+                 <img src={ASSETS.horse} className="w-full drop-shadow-2xl" alt="丙午の馬" />
+              </motion.div>
+
+              {/* 赤背景部分の挨拶テキスト */}
+              <div className="absolute bottom-[8%] left-[15%] md:left-[25%] z-30 text-white opacity-90 leading-relaxed text-sm md:text-base font-medium">
+                <p className="text-2xl font-bold mb-4">丙午</p>
+                <p>謹んで新春のお慶びを申し上げます。<br/>
+                六十年の時を経て巡りきたる「丙午」。<br/>
+                太陽と生命力が重なるこの年は、<br/>
+                強烈な陽の気であらゆる厄災を焼き払います。<br/>
+                大地を蹴る炎の馬のごとく、今こそ内なる情熱を解き放つ時。<br/>
+                新たな時代を切り拓く一年でありたいと願います。</p>
+              </div>
+            </section>
+
+
+            {/* ========================================
+              2. Shrine Section (ドット絵アニメーションリンク)
+              ========================================
+              画像をクリックするとURLへ飛びます。
+              CSSアニメーションでドット絵が生きているような演出を加えています。
+            */}
+            <section className="relative h-screen overflow-hidden bg-black z-40">
+              <a 
+                href={GAME_URL} // ★ここに設定したURLが使われます★
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="block w-full h-full relative group cursor-pointer overflow-hidden"
+              >
+                {/* ドット絵背景 (ピコピコ動くアニメーション) */}
+                <motion.div
+                  className="w-full h-full"
+                  animate={{ y: [0, -10, 0] }} // 上下に少し揺れる
+                  transition={{ duration: 2, repeat: Infinity, ease: "steps(10)" }} // stepsを使うとコマ送りっぽくなる
+                >
+                  <img 
+                    src={ASSETS.shrine} 
+                    className="w-full h-full object-cover opacity-80 pixelated scale-[1.02] group-hover:scale-110 transition-transform duration-700" 
+                    alt="神社リンク"
+                  />
+                </motion.div>
+
+                {/* 雪エフェクト */}
+                <SnowEffect />
+
+                {/* ホバー時の演出（黄色く光る＋文字が出る） */}
+                <div className="absolute inset-0 bg-yellow-500/0 group-hover:bg-yellow-500/20 transition-all duration-500 flex flex-col items-center justify-center">
+                  <p className="text-white font-['DotGothic16'] text-3xl tracking-[0.5em] font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-500 scale-150 group-hover:scale-100">
+                    参拝スル
+                  </p>
+                  <p className="text-white/80 font-['DotGothic16'] text-sm mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-700 delay-100">
+                    (Click to Play Game)
+                  </p>
+                </div>
+              </a>
+            </section>
+
+
+            {/* ========================================
+              3. Footer Section (フッター)
+              ========================================
+            */}
+            <section className="min-h-[80vh] bg-white py-20 px-6 flex items-center justify-center relative z-50">
+              <div className="max-w-5xl w-full flex flex-wrap-reverse md:flex-nowrap gap-12 items-center justify-between">
+                
+                <div className="flex-1 space-y-6">
+                  <h2 className="text-2xl md:text-3xl font-bold text-[#B80028]">まだ全然やることが終わってない！！</h2>
+                  <div className="text-gray-700 leading-8 space-y-4 text-justify text-sm md:text-base">
+                    <p>旧年中は大変お世話になりました。皆様のおかげで無事に2026年を迎えることができました。</p>
+                    <p>実のところ、2025年はやるべきことを完遂できず、悔いの残る形となってしまいました……。決して誇れることではありませんが、気持ちを切り替えて、まずは目の前の課題を一つひとつ片付けていく所存です。</p>
+                    <p className="font-bold text-[#B80028]">早くやるべきことを終わらせて、心置きなくドラマを楽しみたいと思います。</p>
+                  </div>
+                </div>
+                
+                <motion.div style={{ y: y_slow }} className="relative text-center flex-shrink-0 mx-auto md:mx-0">
+                   <div className="absolute -top-8 -left-8 bg-white border-2 border-gray-200 p-3 rounded-full shadow-lg z-10 animate-bounce">
+                     <p className="text-xs text-gray-500 font-bold font-['DotGothic16']">ま……間に合わない</p>
+                   </div>
+                   <img src={ASSETS.girl} className="w-56 md:w-72" alt="キャラクター" />
+                </motion.div>
+
+              </div>
+              
+              <footer className="absolute bottom-4 w-full text-center text-xs text-gray-400 font-['DotGothic16']">
+                © 2026 HINOEUMA Project
+              </footer>
+            </section>
+
+          </div>
+        </>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
 </body>
 </html>
