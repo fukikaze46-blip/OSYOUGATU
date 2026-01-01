@@ -713,6 +713,10 @@
 
     /* ========== スマホ専用レイアウト（完全に別設計） ========== */
     @media (max-width: 600px) {
+        body {
+            background: #f5f0e6;
+        }
+
         /* ===== ヒーローセクション ===== */
         .hero {
             min-height: 100vh;
@@ -934,15 +938,11 @@
             letter-spacing: 0.1em;
         }
 
-        /* ===== 背景エフェクト無効化 ===== */
-        .animated-bg {
-            animation: none;
-            background: #0a0a0a;
-        }
-
+        /* ===== 背景エフェクト完全無効化 ===== */
+        .animated-bg,
         .light-trails,
         .floating-orbs {
-            display: none;
+            display: none !important;
         }
     }
 
@@ -1319,18 +1319,25 @@
             setIsLoading(false);
             document.body.classList.remove('loading');
             document.getElementById('main-content').classList.add('visible');
-            document.getElementById('loading-root').style.display = 'none';
             
-            // 光の軌跡を生成
-            const trailsContainer = document.getElementById('lightTrails');
-            for (let i = 0; i < 15; i++) {
-                const trail = document.createElement('div');
-                trail.className = 'light-trail';
-                trail.style.left = Math.random() * 100 + '%';
-                trail.style.animationDuration = (Math.random() * 8 + 6) + 's';
-                trail.style.animationDelay = Math.random() * 8 + 's';
-                trail.style.height = (Math.random() * 100 + 50) + 'px';
-                trailsContainer.appendChild(trail);
+            // loading-rootを完全に削除
+            const loadingRoot = document.getElementById('loading-root');
+            if (loadingRoot) {
+                loadingRoot.remove();
+            }
+            
+            // 光の軌跡を生成（PCのみ）
+            if (window.innerWidth > 600) {
+                const trailsContainer = document.getElementById('lightTrails');
+                for (let i = 0; i < 15; i++) {
+                    const trail = document.createElement('div');
+                    trail.className = 'light-trail';
+                    trail.style.left = Math.random() * 100 + '%';
+                    trail.style.animationDuration = (Math.random() * 8 + 6) + 's';
+                    trail.style.animationDelay = Math.random() * 8 + 's';
+                    trail.style.height = (Math.random() * 100 + 50) + 'px';
+                    trailsContainer.appendChild(trail);
+                }
             }
         };
 
