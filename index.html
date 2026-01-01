@@ -1319,6 +1319,7 @@
             setIsLoading(false);
             document.body.classList.remove('loading');
             document.getElementById('main-content').classList.add('visible');
+            document.getElementById('loading-root').style.display = 'none';
             
             // 光の軌跡を生成
             const trailsContainer = document.getElementById('lightTrails');
